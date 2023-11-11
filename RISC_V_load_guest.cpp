@@ -5,18 +5,18 @@
 #include <string>
 #include <string.h>
 
+#include "RISC_V_load_guest.h"
 #include "RISC_V_emu.h"
-#include "RISC_V_spec.h"
+#include "RISC_V_cpu_spec.h"
+
 #include "elf.h"
 #include "uleb128.h"
 
 static bool Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
-static void Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, std::unique_ptr<char []> &mem);
-static void Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr);
+void nRISC_V_load_guest::Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
-
-static uint8_t sh_RISC_V_attr[1<<20];
 
 constexpr uint32_t Tag_file = 1;
 constexpr uint32_t Tag_RISCV_stack_align = 4;
@@ -24,6 +24,7 @@ constexpr uint32_t Tag_RISCV_arch = 5;
 constexpr uint32_t Tag_RISCV_unaligned_access = 6;
 constexpr uint32_t Tag_RISCV_atomic_abi = 14;
 constexpr uint32_t Tag_RISCV_x3_reg_usage = 16;
+
 
 
 
@@ -48,8 +49,6 @@ static bool Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr)
         return false;
     }
 
-    std::cout << "pc : " << std::hex << hdr->e_entry << "\n";
-
     return true;
 }
 
@@ -65,7 +64,36 @@ static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, El
     return true;
 }
 
-static void Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, std::unique_ptr<char []> &mem)
+void nRISC_V_load_guest::Init_basic_CPU_attributes(std::string program_name, CPU_Attribute &CPU_attribute)
+{
+    Elf64_Ehdr hdr;
+
+    auto file_stream = std::fopen(program_name.c_str(), "rb");
+
+    assert(file_stream != nullptr);
+
+    auto f = Load_Elf_header(file_stream, &hdr);
+    assert(f == true);
+
+    if (hdr.e_ident[EI_CLASS] == ELFCLASS64)
+        CPU_attribute.xlen = 64;
+    else if (hdr.e_ident[EI_CLASS] == ELFCLASS32)
+        CPU_attribute.xlen = 32;
+
+    if (hdr.e_ident[EI_DATA] == ELFDATA2LSB)
+        CPU_attribute.endian = nUtil::eEndian::little_endian;
+    else if(hdr.e_ident[EI_DATA] == ELFDATA2MSB)
+        CPU_attribute.endian = nUtil::eEndian::big_endian;
+    else if (hdr.e_ident[EI_DATA] == ELFCLASSNONE)
+        CPU_attribute.endian = nUtil::eEndian::other;
+    else
+    {
+        printf("undifined encoding %s %d\n", __func__, __LINE__);
+        abort();
+    }      
+}
+
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr)
 {
     Elf64_Ehdr hdr;
 
@@ -88,22 +116,19 @@ static void Init_guest_segment_mapping(std::string program_name, Program_mdata_t
         f = Load_phdr(file_stream, hdr, i, &phdr);
         assert(f == true);
 
-        std::cout << "p_type : " << phdr.p_type << "\n";
-
         if (phdr.p_type == PT_LOAD)
         {
             if (program_mdata.segment_base == 0)
                 program_mdata.segment_base = phdr.p_vaddr;
 
             program_mdata.brk_addr = phdr.p_vaddr + phdr.p_memsz;
-
-            std::cout << "p_vaddr: " << std::hex << phdr.p_vaddr << " " << std::hex << phdr.p_align << "\n";
-            
+           
             f = std::fseek(file_stream, phdr.p_offset, SEEK_SET);
             assert(f == 0);
             
             std::fread(reinterpret_cast<void*>(&mem[phdr.p_vaddr - program_mdata.segment_base]), phdr.p_memsz, 1, file_stream);
             
+            //set memory to be 0 if its address exceeds p_filesz area
             memset(reinterpret_cast<void*>(&mem[phdr.p_vaddr - program_mdata.segment_base + phdr.p_filesz]), 
                    0,
                    phdr.p_memsz - phdr.p_filesz);
@@ -112,9 +137,15 @@ static void Init_guest_segment_mapping(std::string program_name, Program_mdata_t
         {
             f = std::fseek(file_stream, phdr.p_offset, SEEK_SET);
 
+            sh_RISC_V_attr = new uint8_t[phdr.p_filesz];
+
             std::fread(reinterpret_cast<void*>(sh_RISC_V_attr), phdr.p_filesz, 1, file_stream);
         }
     }
+
+    assert(hdr.e_entry > 0);
+
+    program_mdata.entry_point = hdr.e_entry - program_mdata.segment_base; // initialize program counter
 
     std::fclose(file_stream);
 }
@@ -128,6 +159,8 @@ static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32
 
 // ref: https://github.com/RISC_V-non-isa/RISC_V-elf-psabi-doc/blob/master/RISC_V-elf.adoc#rv-section-type
 
+// null-terminated byte string : (NTBS)
+
 // The attributes section start with a format-version (uint8 = 'A')
 // followed by vendor specific sub-section(s). 
 // A sub-section starts with sub-section length (uint32), vendor name (NTBS)
@@ -140,7 +173,7 @@ static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32
 // a null-terminated byte string (NTBS), 
 // otherwise, it's a uleb128 encoded integer.
 
-static void Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section)
+void nRISC_V_load_guest::Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t *sh_RISC_V_attr)
 {
     assert(sh_RISC_V_attr[0] == static_cast<uint8_t>('A'));
 
@@ -148,12 +181,12 @@ static void Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t 
 
     memcpy(&sub_section_length, &sh_RISC_V_attr[1], sizeof(uint32_t));
   
-    std::string vendor_name = reinterpret_cast<char*>(sh_RISC_V_attr + sizeof(sh_RISC_V_attr[0]) + sizeof(sub_section_length));
+    std::string vendor_name = reinterpret_cast<const char*>(  sh_RISC_V_attr 
+                                                            + sizeof(sh_RISC_V_attr[0]) 
+                                                            + sizeof(sub_section_length));
     
     assert(vendor_name == "riscv");
-
-    uint32_t sub_sub_section_tag = 0;
-    
+  
     auto sub_sub_section_offset = sizeof(sh_RISC_V_attr[0]) 
                                 + sizeof(sub_section_length) 
                                 + vendor_name.length()      /*vendor_name name*/
@@ -179,83 +212,45 @@ static void Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t 
         = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset , 5, sub_sub_section_tag);
 
         cur_actual_attr_offset += sub_sub_section_tag_len;
+        
         std::size_t tag_val_len = 0;
         
         switch(sub_sub_section_tag)
         {
             case Tag_RISCV_stack_align:
-                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_stack_align);
-                 printf("stk %u\n", attr.Tag_RISCV_stack_align);
+                 attr.Tag_RISCV_stack_align.first = true;
+                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_stack_align.second);
             break;
 
             case Tag_RISCV_arch:
-                 attr.Tag_RISCV_arch = reinterpret_cast<char*>(sh_RISC_V_attr + cur_actual_attr_offset);
-                 tag_val_len = attr.Tag_RISCV_arch.length() + 1;
+                 attr.Tag_RISCV_arch.first = true;            
+                 attr.Tag_RISCV_arch.second = reinterpret_cast<const char*>(sh_RISC_V_attr + cur_actual_attr_offset);
+                 tag_val_len = attr.Tag_RISCV_arch.second.length() + 1;
             break;
 
             case Tag_RISCV_unaligned_access:
-                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_unaligned_access);           
+                 attr.Tag_RISCV_unaligned_access.first = true;                  
+                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_unaligned_access.second);           
             break;
 
-            case Tag_RISCV_atomic_abi:            
-                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_atomic_abi);
+            case Tag_RISCV_atomic_abi:
+                 attr.Tag_RISCV_atomic_abi.first = true;                        
+                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_atomic_abi.second);
             break;                
 
-            case Tag_RISCV_x3_reg_usage:            
-                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_x3_reg_usage); 
+            case Tag_RISCV_x3_reg_usage:  
+                 attr.Tag_RISCV_x3_reg_usage.first = true;                        
+                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_x3_reg_usage.second); 
             break;             
             
             default :
                 printf("??? tag %d cur_offset %d\n", sub_sub_section_tag, cur_actual_attr_offset);
                 assert(0);
         }
-        printf("cur_offset %d\n", cur_actual_attr_offset);
         cur_actual_attr_offset += tag_val_len;
     }
-    printf("%s %u %u %u %u\n", attr.Tag_RISCV_arch.c_str(), attr.Tag_RISCV_stack_align,\
-    attr.Tag_RISCV_unaligned_access, attr.Tag_RISCV_atomic_abi, attr.Tag_RISCV_x3_reg_usage);
-/*
-    auto sub_sub_section_tag_len 
-    = Parse_uleb128(sh_RISC_V_attr+sub_sub_section_offset , 4, sub_sub_section_tag);
-
-    //uint32_t sub_sub_section_len = 0;
-
-    memcpy(&sub_sub_section_len, sh_RISC_V_attr+12, sizeof(uint32_t));
-
-    printf("A %d, len %d, %s\n",sh_RISC_V_attr[0], sub_section_length, sh_RISC_V_attr+5);
-
-    printf("sub_sub_section_tag_len: %d sub_sub_section_tag: %d %d\n",sub_sub_section_tag_len, sub_sub_section_tag, sub_sub_section_len);
-
-    uint32_t sub_sub_section_tag2 = 0;
-    
-    auto sub_sub_section_tag2_len = Parse_uleb128(sh_RISC_V_attr+16, 4, sub_sub_section_tag2);
-
-    uint32_t stack_align = 0;
-    Parse_uleb128(sh_RISC_V_attr+17, 4, stack_align);
-    printf("sub_sub_section_tag2_len: %d sub_sub_section_tag2: %d val: %d\n",sub_sub_section_tag2_len, sub_sub_section_tag2, stack_align);
-
-    uint32_t sub_sub_section_tag3 = 0;
-    
-    auto sub_sub_section_tag3_len = Parse_uleb128(sh_RISC_V_attr+18, 5, sub_sub_section_tag3);
-
-    printf("sub_sub_section_tag3_len: %d sub_sub_section_tag3: %d val: %s\n",sub_sub_section_tag3_len, sub_sub_section_tag3, sh_RISC_V_attr+19);
-*/
 }
 
-RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
-{
-    m_RISC_V_attributes = {};
 
-    m_mem = std::unique_ptr<char []>(new char[1<<20]);
-    Init_guest_segment_mapping(program_name, m_progam_mdata, m_mem);
-    Init_guest_RISC_V_attributes(m_RISC_V_attributes, sh_RISC_V_attr);
-    
-    //printf("%s %u %u %u %u\n", m_RISC_V_attributes.Tag_RISCV_arch.c_str(), m_RISC_V_attributes.Tag_RISCV_stack_align,\
-    m_RISC_V_attributes.Tag_RISCV_unaligned_access, m_RISC_V_attributes.Tag_RISCV_atomic_abi, m_RISC_V_attributes.Tag_RISCV_x3_reg_usage);
-    
-    std::cout << std::dec << m_RISC_V_attributes.Tag_RISCV_stack_align << "\n";
-    //std::cout << m_RISC_V_attributes.Tag_RISCV_arch << " " << m_RISC_V_attributes.Tag_RISCV_stack_align << \
-    " " << m_RISC_V_attributes.Tag_RISCV_unaligned_access << " " << m_RISC_V_attributes.Tag_RISCV_atomic_abi << \
-    " " << m_RISC_V_attributes.Tag_RISCV_x3_reg_usage << "\n";
-}
  
+

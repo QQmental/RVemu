@@ -1,13 +1,15 @@
 #pragma once
 
 #include "elf.h"
-#include "RISC_V_spec.h"
+#include "RISC_V_cpu_spec.h"
 #include <memory>
 #include <string>
 
 struct Program_mdata_t
 {
-    Elf64_Addr segment_base, brk_addr, pc;
+    Elf64_Addr segment_base, brk_addr, entry_point;
+
+    Elf64_Addr stack_pointer_alignment;
 };
 
 class RISC_V_Instruction_map;
@@ -19,13 +21,17 @@ public:
     RISC_V_Emulator(const RISC_V_Emulator &src) = delete;
 
     RISC_V_Emulator& operator=(const RISC_V_Emulator &src) = delete;
-    ~RISC_V_Emulator() = default;
+    ~RISC_V_Emulator();
 
-    const Program_mdata_t& program_mdata() const {return m_progam_mdata;}
+    void start();
+    const Program_mdata_t& program_mdata() const {return m_program_mdata;}
+    const CPU_Attribute& CPU_attribute() const {return m_CPU_Archietecture;}
+
 private:
-    Program_mdata_t m_progam_mdata;
-    RISC_V_Attributes m_RISC_V_attributes;
+    Program_mdata_t m_program_mdata;
+    CPU_Attribute m_CPU_Archietecture;
     std::unique_ptr<char []> m_mem;
-    RISC_V_Instruction_map *m_instruction_map;
+    std::unique_ptr<RISC_V_Instruction_map> m_instruction_map;
+
 };
 

@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <string.h>
 #include <memory>
+#include <stddef.h>
 
-#include "elf.h"
 #include "RISC_V_emu.h"
 
 
@@ -17,19 +17,17 @@
 
 int main(int argc, char *argv[])
 {
-    //Program_mdata_t program_mdata;
-    
-    //auto mem = std::unique_ptr<char[]>(new char[1<<20]);
-
-    //Init_emulated_program("./test", program_mdata, mem);
-
-
-    RISC_V_Emulator emu("test");
+    RISC_V_Emulator emu("test3");
 
     auto program_mdata = emu.program_mdata();
     
+    
+
     std::cout << std::hex << program_mdata.segment_base << " " << std::hex << program_mdata.brk_addr << " " << "hi\n";
 
+    std::cout << std::hex << program_mdata.entry_point << " " << std::hex << program_mdata.stack_pointer_alignment << " " << "hi\n";
+
+    printf("%lu %d hi\n", emu.CPU_attribute().xlen, emu.CPU_attribute().endian);
     for(int i = 0 ; i < argc ; i++)
         printf("%s\n",argv[i]);
 }
