@@ -12,9 +12,10 @@
 #include "RISC_V_cmd.h"
 #include "RISC_V_decompose.h"
 
-constexpr RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0xc800'0000'0000'0000;
+using nRISC_V_cpu_spec::RISC_V_Instr_t;
+using nRISC_V_cpu_spec::RV_Instr_component;
 
-using instr_cmd_t = void (*)(nRISC_V_cmd::Instruction_package&);
+constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0xc800'0000'0000'0000;
 
 enum eCPU_state : uint16_t
 {
@@ -26,17 +27,8 @@ enum eCPU_state : uint16_t
 class RISC_V_Instruction_map
 {
 public:
-    std::unordered_map<RISC_V_Instr_t, instr_cmd_t> m_map;
+    std::unordered_map<RISC_V_Instr_t, nRISC_V_cmd::instr_cmd_t> m_map;
 
-};
-
-
-struct CPU_Component
-{
-    BUS bus;
-    RV64I_regster_file reg_file;
-    RV_Instr_component RV_instr_component;
-    eCPU_state CPU_state;
 };
 
 static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
@@ -81,7 +73,7 @@ RISC_V_Emulator::~RISC_V_Emulator()
 }
 
 // decompose instruction into components and mask instruction for map searching
-// return false if the instruction has invalid opcode
+// return false if the instruction has an invalid opcode
 static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component)
 {
     bool opcode_type_status = true;
@@ -161,16 +153,18 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
 
 void RISC_V_Emulator::start()
 {
-    nRISC_V_cmd::RV_reg_file reg_file = {};
+    nRISC_V_cpu_spec::RV_reg_file reg_file = {};
     reg_file.pc = m_program_mdata.entry_point;
-    reg_file.gp_regs[nRISC_V_cmd::RV_reg_file::x2] = gDEFAULT_START_STACK_POINTER;
+    reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] = gDEFAULT_START_STACK_POINTER;
 
-    RV_Instr_component RV_instr_component = {};
+    nRISC_V_cpu_spec::RV_Instr_component RV_instr_component = {};
 
     BUS bus(std::move(m_mem), m_CPU_Archietecture);
 
-    RISC_V_Instr_t instruction, masked_instruction;
+    nRISC_V_cpu_spec::RISC_V_Instr_t instruction, masked_instruction;
     
+    nRISC_V_cmd::Exec_component exec_component(reg_file, bus, RV_instr_component, reg_file.pc+4);
+
     while(1)
     {    
         bus.Fetch_instruction(reg_file, &instruction);
@@ -191,14 +185,16 @@ void RISC_V_Emulator::start()
         nRISC_V_cmd::Instruction_package instr_pkg(reg_file, 
                                                    bus, 
                                                    RV_instr_component, 
-                                                   m_CPU_Archietecture, 
-                                                   instruction);
+                                                   m_CPU_Archietecture);
 
         auto it_instr_cmd = m_instruction_map->m_map.find(masked_instruction);
         
         assert(it_instr_cmd != m_instruction_map->m_map.end());
 
         it_instr_cmd->second(instr_pkg);
+
+        // x0 is hard wired 0
+        reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x0] = 0;
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::finish)
             break;

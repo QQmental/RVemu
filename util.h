@@ -1,9 +1,26 @@
 #pragma once
 #include <stdint.h>
-#include <utility>
+#include <stdio.h>
+#include <stdarg.h>
+
+#define FATALF(fmt, ...) (fprintf(stderr, "fatal: %s:%d " fmt, __FILE__, __LINE__, __VA_ARGS__), exit(1))
+
+
+#ifdef NDEBUG
+    #define CHECK_ERROR(statement) ((void)0)
+#else
+    #define CHECK_ERROR(statement) \
+    if ((statement) == false) \
+        FATALF("%s", #statement);
+#endif
 
 namespace nUtil
 {
+
+inline void TODO(const char *msg) {(fprintf(stderr, "warning: %s:%d [TODO] %s\n", __FILE__, __LINE__, msg)); abort();}
+inline void FATAL(const char *msg) {FATALF("%s", msg);}
+
+
 enum eEndian : int
 {
     little_endian = 0,

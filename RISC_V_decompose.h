@@ -17,33 +17,17 @@ imm[20] |     imm[10:1]               | imm[11] |     imm[19:12]        |       
 
 
 
-compressed instruction format
-
-Format    Meaning                   15 14 13    12 11 10 9 8 7    6 5 4 3 2 1 0
- CR        Register               |   funct4      |  rd/rs1      |    rs2  | op |
- CI        Immediate              | funct3  | imm |  rd/rs1      |    imm  | op |
- CSS       Stack-relative-Store   | funct3  |      imm           |    rs2  | op |
- CIW       Wide Immediate         | funct3  |         imm            | rd' | op |
- CL        Load                   | funct3  |    imm    |  rs1'  |imm| rd' | op |
- CS        Store                  | funct3  |    imm    |  rs1'  |imm| rs2'| op | 
- CA        Arithmetic             |       funct6        |rd'/rs1'| offset  | op |
- CB        Branch                 | funct3  |   offset  |  rs1'  | offset  | op |
- CJ        Jump                   | funct3  |        jump target           | op |
 
 
-RVC Register Number                000  001  010  011  100  101  110  111
-Integer Regsiter Number             x8   x9  x10  x11  x12  x13  x14  x15
-Integer Regsiter ABI Name           s0   s1   a0   a1   a2   a3   a4   a5
-Floting Point Regsiter Number       f8   f9  f10  f11  f12  f13  f14  f15 
-Floting Point Regsiter ABI Name    fs0  fs1  fa0  fa1  fa2  fa3  fa4  fa5
 */
 
 
 /*
 a type RISC_V_Instr_t varriable can represent either a non-compressed or compressed instruction
 
-upper 16 bits of a compressed instruction are 0 in a type RISC_V_Instr_t varriable.
 */
+
+using namespace nRISC_V_cpu_spec;
 
 enum eOpecode_type
 {
@@ -96,6 +80,8 @@ inline void Decompose_Jtype_instruction(RV_Instr_component &result, const RISC_V
 inline RISC_V_Instr_t 
 Extract_portion_of_instruction(const RISC_V_Instr_t &targ, uint32_t upper_bit_pos, uint32_t lower_bit_pos)
 {
+    assert(upper_bit_pos >= lower_bit_pos);
+
     auto left_shift_len = sizeof(RISC_V_Instr_t) * std::numeric_limits<uint8_t>::digits - 1 - upper_bit_pos;
     auto t = targ << left_shift_len;
     return t >> (sizeof(RISC_V_Instr_t) * std::numeric_limits<uint8_t>::digits - 1 - upper_bit_pos + lower_bit_pos);

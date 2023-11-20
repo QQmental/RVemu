@@ -4,68 +4,67 @@
 
 class BUS;
 
+
+
+
 namespace nRISC_V_cmd
 {
+struct Instruction_package;
 
-/* default Xlength = 64 */
+constexpr uint32_t gXLEN = sizeof(nRISC_V_cpu_spec::Int_t) * std::numeric_limits<uint8_t>::digits;
 
-#if defined(XLEN) == 64
-using Int_t = int64_t;
-using Uint_t = uint64_t;
-using RV_reg_file = RV64I_regster_file;
-
-#elif defined(XLEN) == 32
-using Int_t = int32_t;
-using Uint_t = uint32_t;
-using RV_reg_file = RV32I_regster_file;
-
-#elif defined(XLEN) == 128
-using Int_t = int128_t;
-using Uint_t = uint128_t;
-
-static_assert(0, "XLEN = 128 is not implemented\n");
-
-#else 
-using Int_t = int64_t;
-using Uint_t = uint64_t;
-using RV_reg_file = RV64I_regster_file;
-#endif
-
-constexpr uint32_t gXLEN = sizeof(Int_t) * std::numeric_limits<uint8_t>::digits;
-
+using instr_cmd_t = void (*)(nRISC_V_cmd::Instruction_package&);
 
 enum execution_exception : uint16_t
 {
     none = 0,
     divided_by_zero = 1,
-    finish
+    finish,
+    trap
 };
 
 
+struct Exec_component
+{
+    Exec_component(nRISC_V_cpu_spec::RV_reg_file &in_regs, 
+                   BUS &in_bus, 
+                   const nRISC_V_cpu_spec::RV_Instr_component &in_component,
+                   nRISC_V_cpu_spec::RISC_V_Addr_t in_next_pc)
+    : regs(in_regs), 
+      bus(in_bus),
+      RV_instr_component(in_component),
+      next_pc(in_next_pc)
+    {
+
+    }
+    nRISC_V_cpu_spec::RV_reg_file &regs;
+    const nRISC_V_cpu_spec::RV_Instr_component &RV_instr_component;
+    BUS &bus;
+    nRISC_V_cpu_spec::RISC_V_Addr_t next_pc;
+};
 
 struct Instruction_package
 {
-    Instruction_package(RV_reg_file &in_regs, 
+    Instruction_package(nRISC_V_cpu_spec::RV_reg_file &in_regs, 
                         BUS &in_bus, 
-                        const RV_Instr_component &in_component, 
-                        const CPU_Attribute &in_CPU_archietecture,
-                        const RISC_V_Instr_t &in_instruction)
+                        const nRISC_V_cpu_spec::RV_Instr_component &in_component, 
+                        const nRISC_V_cpu_spec::CPU_Attribute &in_CPU_archietecture)
     : regs(in_regs), 
       bus(in_bus),
       CPU_attribute(in_CPU_archietecture),
       RV_instr_component(in_component),
-      instruction(in_instruction), 
       except(execution_exception::none)
     {
 
     }
-    RV_reg_file &regs;
+    nRISC_V_cpu_spec::RV_reg_file &regs;
     BUS &bus;
-    const CPU_Attribute &CPU_attribute;
-    const RV_Instr_component &RV_instr_component;
-    RISC_V_Instr_t instruction;
+    const nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute;
+    const nRISC_V_cpu_spec::RV_Instr_component &RV_instr_component;
     execution_exception except; 
 };
+
+// ref: riscv-spec-20191213
 
 void ADDI(Instruction_package &instr_pkg);
 void ADD(Instruction_package &instr_pkg);
@@ -75,22 +74,14 @@ void SLTU(Instruction_package &instr_pkg);
 void SLTI(Instruction_package &instr_pkg);
 void SLTIU(Instruction_package &instr_pkg);
 
-void RV32_SLLI(Instruction_package &instr_pkg);
-void RV32_SRLI(Instruction_package &instr_pkg);
-void RV32_SRAI(Instruction_package &instr_pkg);
-void RV32_SLL(Instruction_package &instr_pkg);
-void RV32_SRL(Instruction_package &instr_pkg);
-void RV32_SRA(Instruction_package &instr_pkg);
+void SLLI(Instruction_package &instr_pkg);
+void SRLI(Instruction_package &instr_pkg);
+void SRAI(Instruction_package &instr_pkg);
+void SLL(Instruction_package &instr_pkg);
+void SRL(Instruction_package &instr_pkg);
+void SRA(Instruction_package &instr_pkg);
 
-void RV64_SLLI(Instruction_package &instr_pkg);
-void RV64_SRLI(Instruction_package &instr_pkg);
-void RV64_SRAI(Instruction_package &instr_pkg);
-void RV64_SLL(Instruction_package &instr_pkg);
-void RV64_SRL(Instruction_package &instr_pkg);
-void RV64_SRA(Instruction_package &instr_pkg);
-
-void RV32_LUI(Instruction_package &instr_pkg);
-void RV64_LUI(Instruction_package &instr_pkg);
+void LUI(Instruction_package &instr_pkg);
 
 void AUIPC(Instruction_package &instr_pkg);
 
@@ -122,7 +113,9 @@ void BGEQ(Instruction_package &instr_pkg);
 void JAl(Instruction_package &instr_pkg);
 void JALR(Instruction_package &instr_pkg);
 
-void E_CALL_or_BREAK(Instruction_package &instr_pkg);
+void SYSTEM(Instruction_package &instr_pkg);
+void ECALL(Instruction_package &instr_pkg);
+void EBREAK(Instruction_package &instr_pkg);
 
 void FENCE_I(Instruction_package &instr_pkg);
 
@@ -144,5 +137,32 @@ void SRLW(Instruction_package &instr_pkg);
 void SRAW(Instruction_package &instr_pkg);
 void SUBW(Instruction_package &instr_pkg);
 
+void Illegal_CMD(Instruction_package &instr_pkg);
+void NOP(Instruction_package &instr_pkg);
+void HINT(Instruction_package &instr_pkg);
+// compressed instruction
+
+
+
+// Control Transfer Instructions
+
+void C_JAL(Instruction_package &instr_pkg);
+
+/* 
+  C.JALR expands to jalr x1, 0(rs1). 
+  Strictly speaking, C.JALR does not expand exactly to a base RVI instruction as the value added
+  to the PC to form the link address is 2 rather than 4 as in the base ISA,
+*/
+void C_JALR(Instruction_package &instr_pkg);
+
+
+// Defined Illegal Instruction
+// all-zero instruction is an illegal instruction
+
+// NOP Instruction
+void C_NOP(Instruction_package &instr_pkg);
+
+// Breakpoint Instruction
+void C_EBREAK(Instruction_package &instr_pkg);
 }
 

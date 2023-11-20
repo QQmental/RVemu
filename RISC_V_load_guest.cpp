@@ -15,7 +15,8 @@
 static bool Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
 void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr);
-void nRISC_V_load_guest::Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
+void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
+void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
 
 constexpr uint32_t Tag_file = 1;
@@ -64,7 +65,7 @@ static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, El
     return true;
 }
 
-void nRISC_V_load_guest::Init_basic_CPU_attributes(std::string program_name, CPU_Attribute &CPU_attribute)
+void nRISC_V_load_guest::Init_basic_CPU_attributes(std::string program_name, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
 {
     Elf64_Ehdr hdr;
 
@@ -173,7 +174,7 @@ static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32
 // a null-terminated byte string (NTBS), 
 // otherwise, it's a uleb128 encoded integer.
 
-void nRISC_V_load_guest::Init_guest_RISC_V_attributes(RISC_V_Attributes &attr, const uint8_t *sh_RISC_V_attr)
+void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *sh_RISC_V_attr)
 {
     assert(sh_RISC_V_attr[0] == static_cast<uint8_t>('A'));
 
