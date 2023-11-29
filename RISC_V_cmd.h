@@ -113,15 +113,15 @@ void BNE(Instruction_package &instr_pkg);
 void BLT(Instruction_package &instr_pkg);
 void BGE(Instruction_package &instr_pkg);
 void BLTU(Instruction_package &instr_pkg);
-void BGEQ(Instruction_package &instr_pkg);
-void JAl(Instruction_package &instr_pkg);
+void BGEU(Instruction_package &instr_pkg);
+void JAL(Instruction_package &instr_pkg);
 void JALR(Instruction_package &instr_pkg);
 
 void SYSTEM(Instruction_package &instr_pkg);
 void ECALL(Instruction_package &instr_pkg);
 void EBREAK(Instruction_package &instr_pkg);
 
-void FENCE_I(Instruction_package &instr_pkg);
+void FENCE(Instruction_package &instr_pkg);
 
 void CSRRW(Instruction_package &instr_pkg);
 void CSRRS(Instruction_package &instr_pkg);

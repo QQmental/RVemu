@@ -54,8 +54,8 @@ void nRISC_V_cmd::BNE(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BLT(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BGE(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BLTU(Instruction_package &instr_pkg);
-void nRISC_V_cmd::BGEQ(Instruction_package &instr_pkg);
-void nRISC_V_cmd::JAl(Instruction_package &instr_pkg);
+void nRISC_V_cmd::BGEU(Instruction_package &instr_pkg);
+void nRISC_V_cmd::JAL(Instruction_package &instr_pkg);
 void nRISC_V_cmd::JALR(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::Illegal_CMD(Instruction_package &instr_pkg);
@@ -66,7 +66,7 @@ void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg);
 void nRISC_V_cmd::ECALL(Instruction_package &instr_pkg);
 void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg);
 
-void nRISC_V_cmd::FENCE_I(Instruction_package &instr_pkg);
+void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::CSRRW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg);
@@ -407,7 +407,7 @@ void nRISC_V_cmd::LW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    instr_pkg.bus.Load_data(reinterpret_cast<char*>(&rd_val), static_cast<Int_t>(rs1_val) + se_imm, 4);
+    instr_pkg.bus.Load_data(reinterpret_cast<char*>(&rd_val), rs1_val + se_imm, 4);
     
     if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
         nUtil::Swap_endian(rd_val);
@@ -593,7 +593,7 @@ void nRISC_V_cmd::BLTU(Instruction_package &instr_pkg)
         instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
-void nRISC_V_cmd::BGEQ(Instruction_package &instr_pkg)
+void nRISC_V_cmd::BGEU(Instruction_package &instr_pkg)
 {
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
@@ -605,7 +605,7 @@ void nRISC_V_cmd::BGEQ(Instruction_package &instr_pkg)
         instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
-void nRISC_V_cmd::JAl(Instruction_package &instr_pkg)
+void nRISC_V_cmd::JAL(Instruction_package &instr_pkg)
 {
     auto se_imm = Signed_extend<Int_t, 21>(instr_pkg.RV_instr_component.imm);
     
@@ -662,7 +662,7 @@ void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg)
     printf("%s unimplemented\n", __func__);
 }
 
-void nRISC_V_cmd::FENCE_I(Instruction_package &instr_pkg)
+void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg)
 {
     instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
     printf("%s unimplemented\n", __func__);

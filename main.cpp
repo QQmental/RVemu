@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     auto program_mdata = emu.program_mdata();
     
-    emu.start();
+    
 
     std::cout << std::hex << program_mdata.segment_base << " " << std::hex << program_mdata.brk_addr << " " << "hi\n";
 
@@ -29,6 +29,9 @@ int main(int argc, char *argv[])
     std::hex << emu.CPU_attribute().RISC_V_attributes.Tag_RISCV_stack_align.second << " " << "hi\n";
 
     printf("%lu %d hi\n", emu.CPU_attribute().xlen, emu.CPU_attribute().endian);
+
+    emu.start();
+    
     for(int i = 0 ; i < argc ; i++)
         printf("%s\n",argv[i]);
 }

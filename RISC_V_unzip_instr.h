@@ -61,7 +61,7 @@ public:
     virtual nRISC_V_cmd::instr_cmd_t C_FSW() {nUtil::FATAL("C.FSW is not implemented\n"); return nullptr;}
     virtual nRISC_V_cmd::instr_cmd_t C_FSD() {nUtil::FATAL("C.FSD is not implemented\n"); return nullptr;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_J() {return nRISC_V_cmd::JAl;}
+    virtual nRISC_V_cmd::instr_cmd_t C_J() {return nRISC_V_cmd::JAL;}
     virtual nRISC_V_cmd::instr_cmd_t C_JAL() {return nRISC_V_cmd::C_JAL;}
     virtual nRISC_V_cmd::instr_cmd_t C_JR() {return nRISC_V_cmd::JALR;}
     virtual nRISC_V_cmd::instr_cmd_t C_JALR() {return nRISC_V_cmd::C_JALR;} 
