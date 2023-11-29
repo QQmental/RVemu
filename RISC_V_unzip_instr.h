@@ -147,7 +147,7 @@ public:
     
     virtual nRISC_V_cmd::instr_cmd_t C_Illegal_instruction() {return nRISC_V_cmd::Illegal_CMD;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_NOP() {return nRISC_V_cmd::C_NOP;}
+    virtual nRISC_V_cmd::instr_cmd_t C_NOP() {return nRISC_V_cmd::NOP;}
 
     virtual nRISC_V_cmd::instr_cmd_t C_EBREAK() {return nRISC_V_cmd::EBREAK;}
 
@@ -160,5 +160,6 @@ public:
 
 void Unzip_compressed_instr(nRISC_V_cpu_spec::RISC_V_Instr_t instruction, 
                             nRISC_V_cpu_spec::RV_Instr_component &component,
-                            nRISC_V_cmd::instr_cmd_t *dst_cmd);
+                            nRISC_V_cmd::instr_cmd_t *dst_cmd,
+                            Compressed_command_map &cmd_map);
 }

@@ -15,7 +15,7 @@
 using nRISC_V_cpu_spec::RISC_V_Instr_t;
 using nRISC_V_cpu_spec::RV_Instr_component;
 
-constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0xc800'0000'0000'0000;
+constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0x0000'0000'0200'0000;
 
 enum eCPU_state : uint16_t
 {
@@ -24,16 +24,116 @@ enum eCPU_state : uint16_t
     running
 };
 
+
 class RISC_V_Instruction_map
 {
 public:
+    struct Command_attribute
+    {
+        nRISC_V_cmd::instr_cmd_t cmd;
+        nRISC_V_decompose::eOpecode_type op_type;
+        std::string name;
+    };
+    
+    // return true if the cmd hasn't been inserted before Regist_cmd is called.
+    bool Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd);
+    bool Regist_cmd(RISC_V_Instr_t cmd_mask, const RISC_V_Instruction_map::Command_attribute &attr);
+    
+    // a map for non-compressed instructions
     std::unordered_map<RISC_V_Instr_t, nRISC_V_cmd::instr_cmd_t> m_map;
 
 };
 
+bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd)
+{
+    nRISC_V_decompose::eOpecode_type garbage;
+    
+    RISC_V_Instruction_map::Command_attribute attr;
+    attr.cmd = cmd;
+    attr.op_type = garbage;
+    attr.name = "";
+    
+    return Regist_cmd(cmd_mask, attr);
+}
+
+bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, const RISC_V_Instruction_map::Command_attribute &attr)
+{
+    auto f = m_map.emplace(cmd_mask, attr.cmd);
+
+    return f.second == true;
+}
+
+
 static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
+static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
+static void Regist_RVI_cmd(RISC_V_Instruction_map &);
 
 
+static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
+{
+    Elf64_Ehdr hdr;
+
+    auto file_stream = std::fopen(program_name.c_str(), "rb");
+
+    assert(file_stream != nullptr);
+
+    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
+    assert(f == true);
+
+    if (hdr.e_ident[EI_CLASS] == ELFCLASS64)
+        CPU_attribute.xlen = 64;
+    else if (hdr.e_ident[EI_CLASS] == ELFCLASS32)
+        CPU_attribute.xlen = 32;
+
+    if (hdr.e_ident[EI_DATA] == ELFDATA2LSB)
+        CPU_attribute.endian = nUtil::eEndian::little_endian;
+    else if(hdr.e_ident[EI_DATA] == ELFDATA2MSB)
+        CPU_attribute.endian = nUtil::eEndian::big_endian;
+    else if (hdr.e_ident[EI_DATA] == ELFCLASSNONE)
+        CPU_attribute.endian = nUtil::eEndian::other;
+    else
+    {
+        printf("undifined encoding %s %d\n", __func__, __LINE__);
+        abort();
+    }    
+
+    CPU_attribute.highest_addr = program_mdata.highest_addr;
+    CPU_attribute.base_addr = program_mdata.segment_base;
+}
+
+static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
+{
+    RISC_V_Instruction_map::Command_attribute attr;
+
+    bool regist_success {};
+
+    #define REGIST_CMD(CMD_MASK, CMD, OP_TYPE)\
+    do\
+    {\
+        attr.cmd = nRISC_V_cmd::CMD;\
+        attr.name = #CMD;\
+        attr.op_type = nRISC_V_decompose::eOpecode_type::OP_TYPE;\
+        regist_success = map.Regist_cmd(CMD_MASK, attr);\
+        CHECK_ERROR(regist_success == true);\
+    }while(0);
+
+    REGIST_CMD(0b00000000000000000000'00000'0110111, LUI, U);
+    REGIST_CMD(0b00000000000000000000'00000'0010111, AUIPC, U);
+    REGIST_CMD(0b00000000000000000000'00000'0010111, AUIPC, U);
+    //REGIST_CMD(0b10111, LUI, U);
+    //REGIST_CMD(0b10111, LUI, U);
+    //REGIST_CMD(0b10111, LUI, U);
+    //REGIST_CMD(0b10111, LUI, U);
+    //REGIST_CMD(0b10111, LUI, U);
+    //REGIST_CMD(0b10111, LUI, U);
+    //REGIST_CMD(0b10111, LUI, U);
+
+
+
+
+    //map.Regist_cmd()
+    #undef REGIST_CMD
+}
 
 RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
 {
@@ -41,16 +141,15 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
     
     m_CPU_Archietecture = {};
 
-    m_mem = std::unique_ptr<char[]>(new char[1<<20]);
+    m_mem = std::unique_ptr<char[]>(new char[gDEFAULT_START_STACK_POINTER]);
 
-    nRISC_V_load_guest::Init_basic_CPU_attributes(program_name, m_CPU_Archietecture);
     nRISC_V_load_guest::Init_guest_segment_mapping(program_name, m_program_mdata, m_mem.get(), sh_RISC_V_attr);
     nRISC_V_load_guest::Init_guest_RISC_V_attributes(m_CPU_Archietecture.RISC_V_attributes, sh_RISC_V_attr);
     
     if (m_CPU_Archietecture.RISC_V_attributes.Tag_RISCV_stack_align.first == true)
         m_program_mdata.stack_pointer_alignment = m_CPU_Archietecture.RISC_V_attributes.Tag_RISCV_stack_align.second;
-    
-    
+    else
+        m_program_mdata.stack_pointer_alignment = 16;
 
     printf("%s %u %u %u %u\n", m_CPU_Archietecture.RISC_V_attributes.Tag_RISCV_arch.second.c_str(), \
     m_CPU_Archietecture.RISC_V_attributes.Tag_RISCV_stack_align.second,\
@@ -58,12 +157,18 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
     m_CPU_Archietecture.RISC_V_attributes.Tag_RISCV_atomic_abi.second, \
     m_CPU_Archietecture.RISC_V_attributes.Tag_RISCV_x3_reg_usage.second);
     
+    
+    if (m_program_mdata.highest_addr >= gDEFAULT_START_STACK_POINTER - (1<<16))
+        nUtil::FATAL("stack addr is not high enough in guest\n");
 
+    m_program_mdata.highest_addr = gDEFAULT_START_STACK_POINTER;
+
+    Init_basic_CPU_attributes(program_name, m_program_mdata, m_CPU_Archietecture);
 
     m_instruction_map = std::make_unique<RISC_V_Instruction_map>();
 
-
-
+    Regist_RVI_cmd(*m_instruction_map.get());
+    
     delete[] sh_RISC_V_attr;
 }
 
@@ -81,31 +186,33 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
     switch(nRISC_V_decompose::opcode(instruction))
     {
         case 0b0110011:
-             nRISC_V_decompose::Decompose_Rtype_instruction(component, instruction);
-             *mask_dst = instruction & RISC_V_Instr_t(0b1111111'00000'00000'111'00000'1111111);
+            nRISC_V_decompose::Decompose_Rtype_instruction(component, instruction);
+            *mask_dst = instruction & RISC_V_Instr_t(0b1111111'00000'00000'111'00000'1111111);
         break;
 
         case 0b0000011:
-             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
-             *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
+            nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
+            *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
         break;
 
         case 0b0010011:
-             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
+            nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
 
-             if (nRISC_V_decompose::funct3(instruction) == 0b001 || nRISC_V_decompose::funct3(instruction) == 0b101)
-                *mask_dst = instruction & RISC_V_Instr_t(0b111111111111'00000'111'00000'1111111);
-             else
-                *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);                
+            // SLLI, SRLI, SRAI ...
+            if (nRISC_V_decompose::funct3(instruction) == 0b001 || nRISC_V_decompose::funct3(instruction) == 0b101)
+               *mask_dst = instruction & RISC_V_Instr_t(0b1111111'00000'00000'111'00000'1111111);
+            // ADDI, SLTI ...
+            else
+               *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);                
         break;
 
         case 0b0011011:
-             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);    
+            nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);    
 
-             if (nRISC_V_decompose::funct3(instruction) == 0b000)
-                 *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);   
-             else
-                *mask_dst = instruction & RISC_V_Instr_t(0b111111111111'00000'111'00000'1111111);
+            if (nRISC_V_decompose::funct3(instruction) == 0b000)
+                *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);   
+            else
+               *mask_dst = instruction & RISC_V_Instr_t(0b111111111111'00000'111'00000'1111111);
         break;
 
         case 0b0001111:
@@ -163,7 +270,7 @@ void RISC_V_Emulator::start()
 
     nRISC_V_cpu_spec::RISC_V_Instr_t instruction, masked_instruction;
     
-    nRISC_V_cmd::Exec_component exec_component(reg_file, bus, RV_instr_component, reg_file.pc+4);
+    nRISC_V_cmd::Exec_component exec_component(reg_file, bus, RV_instr_component);
 
     while(1)
     {    
@@ -172,29 +279,40 @@ void RISC_V_Emulator::start()
         if (m_CPU_Archietecture.endian != nUtil::gHOST_ENDIAN)
             nUtil::Swap_endian(instruction);
 
-        /* the lowest 2 bits of a compressed instruction is 0b11*/
+        nRISC_V_cpu_spec::RISC_V_Addr_t next_pc{};
+        assert(instruction != 0);
+        /* the lowest 2 bits of a compressed instruction is not 0b11*/
         if ((nRISC_V_decompose::opcode(instruction) & 0b11) != 0b11)
         {
+            next_pc = reg_file.pc + 2;
+        }
+        else
+        {
+            bool opcode_type_status = Processing_instruction(instruction, &masked_instruction, RV_instr_component);
 
+            assert(opcode_type_status == true);
+
+            next_pc = reg_file.pc + 4;
         }
 
-        bool opcode_type_status = Processing_instruction(instruction, &masked_instruction, RV_instr_component);
+        printf("test: %x %x\n",reg_file.pc , instruction);
+        //06e000ef jal	101bc <main>, jump to main, then just stop
+        if (instruction == 0x06e000ef)
+            break;
 
-        assert(opcode_type_status == true);
 
-        nRISC_V_cmd::Instruction_package instr_pkg(reg_file, 
-                                                   bus, 
-                                                   RV_instr_component, 
-                                                   m_CPU_Archietecture);
+        nRISC_V_cmd::Instruction_package instr_pkg(exec_component, next_pc, m_CPU_Archietecture);
 
-        auto it_instr_cmd = m_instruction_map->m_map.find(masked_instruction);
+        //auto it_instr_cmd = m_instruction_map->m_map.find(masked_instruction);
         
-        assert(it_instr_cmd != m_instruction_map->m_map.end());
+        //assert(it_instr_cmd != m_instruction_map->m_map.end());
 
-        it_instr_cmd->second(instr_pkg);
+        //it_instr_cmd->second(instr_pkg);
 
         // x0 is hard wired 0
         reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x0] = 0;
+
+        reg_file.pc = next_pc;
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::finish)
             break;

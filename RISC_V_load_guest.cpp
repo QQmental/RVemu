@@ -12,10 +12,9 @@
 #include "elf.h"
 #include "uleb128.h"
 
-static bool Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
+bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
 void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr);
-void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
 
@@ -29,7 +28,7 @@ constexpr uint32_t Tag_RISCV_x3_reg_usage = 16;
 
 
 
-static bool Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr)
+bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr)
 {
     auto f = std::fread(reinterpret_cast<void*>(hdr), 1, sizeof(Elf64_Ehdr), file_stream);
 
@@ -65,35 +64,8 @@ static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, El
     return true;
 }
 
-void nRISC_V_load_guest::Init_basic_CPU_attributes(std::string program_name, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
-{
-    Elf64_Ehdr hdr;
-
-    auto file_stream = std::fopen(program_name.c_str(), "rb");
-
-    assert(file_stream != nullptr);
-
-    auto f = Load_Elf_header(file_stream, &hdr);
-    assert(f == true);
-
-    if (hdr.e_ident[EI_CLASS] == ELFCLASS64)
-        CPU_attribute.xlen = 64;
-    else if (hdr.e_ident[EI_CLASS] == ELFCLASS32)
-        CPU_attribute.xlen = 32;
-
-    if (hdr.e_ident[EI_DATA] == ELFDATA2LSB)
-        CPU_attribute.endian = nUtil::eEndian::little_endian;
-    else if(hdr.e_ident[EI_DATA] == ELFDATA2MSB)
-        CPU_attribute.endian = nUtil::eEndian::big_endian;
-    else if (hdr.e_ident[EI_DATA] == ELFCLASSNONE)
-        CPU_attribute.endian = nUtil::eEndian::other;
-    else
-    {
-        printf("undifined encoding %s %d\n", __func__, __LINE__);
-        abort();
-    }      
-}
-
+// highest_addr is set to be the highest addr among those loaded segment
+// a piece of memory is allocated for 'sh_RISC_V_attr' when a segment of type 'PT_RISC_V_ATTRIBUTES' exists.
 void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr)
 {
     Elf64_Ehdr hdr;
@@ -102,7 +74,7 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Pr
 
     assert(file_stream != nullptr);
 
-    auto f = Load_Elf_header(file_stream, &hdr);
+    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
     assert(f == true);
 
     if (std::fseek(file_stream, hdr.e_phoff + hdr.e_phentsize * hdr.e_phnum, SEEK_SET) != 0)
@@ -133,6 +105,8 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Pr
             memset(reinterpret_cast<void*>(&mem[phdr.p_vaddr - program_mdata.segment_base + phdr.p_filesz]), 
                    0,
                    phdr.p_memsz - phdr.p_filesz);
+
+            program_mdata.highest_addr = phdr.p_vaddr;
         }
         else if (phdr.p_type == PT_RISC_V_ATTRIBUTES)
         {
@@ -146,7 +120,7 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Pr
 
     assert(hdr.e_entry > 0);
 
-    program_mdata.entry_point = hdr.e_entry - program_mdata.segment_base; // initialize program counter
+    program_mdata.entry_point = hdr.e_entry; // initialize program counter
 
     std::fclose(file_stream);
 }

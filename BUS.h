@@ -16,7 +16,7 @@ public:
     void Load_data(char *dst, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size);
     void Store_data(const char *src, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size);
 
-    void Fetch_instruction(const nRISC_V_cpu_spec::RV64I_regster_file &reg_file, nRISC_V_cpu_spec::RISC_V_Instr_t *dst);
+    void Fetch_instruction(const nRISC_V_cpu_spec::RV64_Regster_file &reg_file, nRISC_V_cpu_spec::RISC_V_Instr_t *dst);
     nUtil::eEndian endian() const {return m_CPU_archietecture.endian;}
 
 private:

@@ -542,7 +542,7 @@ void nRISC_V_cmd::BEQ(Instruction_package &instr_pkg)
     auto se_imm = Signed_extend<Int_t, 13>(instr_pkg.RV_instr_component.imm);
 
     if (rs1_val == rs2_val)
-        instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+        instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::BNE(Instruction_package &instr_pkg)
@@ -554,7 +554,7 @@ void nRISC_V_cmd::BNE(Instruction_package &instr_pkg)
     auto se_imm = Signed_extend<Int_t, 13>(instr_pkg.RV_instr_component.imm);
 
     if (rs1_val != rs2_val)
-        instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+        instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::BLT(Instruction_package &instr_pkg)
@@ -566,7 +566,7 @@ void nRISC_V_cmd::BLT(Instruction_package &instr_pkg)
     auto se_imm = Signed_extend<Int_t, 13>(instr_pkg.RV_instr_component.imm);
 
     if (static_cast<Int_t>(rs1_val) < static_cast<Int_t>(rs2_val))
-        instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+        instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::BGE(Instruction_package &instr_pkg)
@@ -578,7 +578,7 @@ void nRISC_V_cmd::BGE(Instruction_package &instr_pkg)
     auto se_imm = Signed_extend<Int_t, 13>(instr_pkg.RV_instr_component.imm);
 
     if (static_cast<Int_t>(rs1_val) >= static_cast<Int_t>(rs2_val))
-        instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+        instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::BLTU(Instruction_package &instr_pkg)
@@ -590,7 +590,7 @@ void nRISC_V_cmd::BLTU(Instruction_package &instr_pkg)
     auto se_imm = Signed_extend<Int_t, 13>(instr_pkg.RV_instr_component.imm);
 
     if (rs1_val < rs2_val)
-        instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+        instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::BGEQ(Instruction_package &instr_pkg)
@@ -602,7 +602,7 @@ void nRISC_V_cmd::BGEQ(Instruction_package &instr_pkg)
     auto se_imm = Signed_extend<Int_t, 13>(instr_pkg.RV_instr_component.imm);
 
     if (rs1_val >= rs2_val)
-        instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+        instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::JAl(Instruction_package &instr_pkg)
@@ -613,7 +613,7 @@ void nRISC_V_cmd::JAl(Instruction_package &instr_pkg)
 
     rd_val = instr_pkg.regs.pc + 4;
 
-    instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+    instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::JALR(Instruction_package &instr_pkg)
@@ -626,7 +626,7 @@ void nRISC_V_cmd::JALR(Instruction_package &instr_pkg)
 
     rd_val = instr_pkg.regs.pc + 4;
 
-    instr_pkg.regs.pc = (rs1_val + se_imm) & (~0x1);
+    instr_pkg.next_pc = (rs1_val + se_imm) & (~0x1);
 }
 
 void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg)
@@ -850,7 +850,7 @@ void nRISC_V_cmd::C_JAL(Instruction_package &instr_pkg)
 
     rd_val = instr_pkg.regs.pc + 2;
 
-    instr_pkg.regs.pc = instr_pkg.regs.pc + se_imm;
+    instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::C_JALR(Instruction_package &instr_pkg)
@@ -868,5 +868,5 @@ void nRISC_V_cmd::C_JALR(Instruction_package &instr_pkg)
     rd_val = instr_pkg.regs.pc + 2;
 
     // imm should be equal to 0, so it's written in 'rs1_val + 0'
-    instr_pkg.regs.pc = (rs1_val + 0) & (~0x1);
+    instr_pkg.next_pc = (rs1_val + 0) & (~0x1);
 }

@@ -28,40 +28,44 @@ struct Exec_component
 {
     Exec_component(nRISC_V_cpu_spec::RV_reg_file &in_regs, 
                    BUS &in_bus, 
-                   const nRISC_V_cpu_spec::RV_Instr_component &in_component,
-                   nRISC_V_cpu_spec::RISC_V_Addr_t in_next_pc)
+                   const nRISC_V_cpu_spec::RV_Instr_component &in_component)
     : regs(in_regs), 
       bus(in_bus),
-      RV_instr_component(in_component),
-      next_pc(in_next_pc)
+      RV_instr_component(in_component)
     {
 
     }
     nRISC_V_cpu_spec::RV_reg_file &regs;
     const nRISC_V_cpu_spec::RV_Instr_component &RV_instr_component;
     BUS &bus;
-    nRISC_V_cpu_spec::RISC_V_Addr_t next_pc;
 };
 
 struct Instruction_package
 {
-    Instruction_package(nRISC_V_cpu_spec::RV_reg_file &in_regs, 
-                        BUS &in_bus, 
-                        const nRISC_V_cpu_spec::RV_Instr_component &in_component, 
+    Instruction_package(Exec_component &exec_component,
+                        nRISC_V_cpu_spec::RISC_V_Addr_t in_next_pc,
                         const nRISC_V_cpu_spec::CPU_Attribute &in_CPU_archietecture)
-    : regs(in_regs), 
-      bus(in_bus),
+    : m_exec_component(exec_component),
+      regs(exec_component.regs), 
+      bus(exec_component.bus),
       CPU_attribute(in_CPU_archietecture),
-      RV_instr_component(in_component),
+      RV_instr_component(exec_component.RV_instr_component),
+      next_pc(in_next_pc),
       except(execution_exception::none)
     {
 
     }
+
+private:
+  Exec_component &m_exec_component;
+
+public:
     nRISC_V_cpu_spec::RV_reg_file &regs;
     BUS &bus;
     const nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute;
     const nRISC_V_cpu_spec::RV_Instr_component &RV_instr_component;
-    execution_exception except; 
+    nRISC_V_cpu_spec::RISC_V_Addr_t next_pc;
+    execution_exception except;
 };
 
 // ref: riscv-spec-20191213
@@ -140,11 +144,6 @@ void SUBW(Instruction_package &instr_pkg);
 void Illegal_CMD(Instruction_package &instr_pkg);
 void NOP(Instruction_package &instr_pkg);
 void HINT(Instruction_package &instr_pkg);
-// compressed instruction
-
-
-
-// Control Transfer Instructions
 
 void C_JAL(Instruction_package &instr_pkg);
 
@@ -156,13 +155,6 @@ void C_JAL(Instruction_package &instr_pkg);
 void C_JALR(Instruction_package &instr_pkg);
 
 
-// Defined Illegal Instruction
-// all-zero instruction is an illegal instruction
 
-// NOP Instruction
-void C_NOP(Instruction_package &instr_pkg);
-
-// Breakpoint Instruction
-void C_EBREAK(Instruction_package &instr_pkg);
 }
 

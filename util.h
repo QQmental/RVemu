@@ -9,6 +9,7 @@
 #ifdef NDEBUG
     #define CHECK_ERROR(statement) ((void)0)
 #else
+    /*if the statement is false, it's an error*/
     #define CHECK_ERROR(statement) \
     if ((statement) == false) \
         FATALF("%s", #statement);

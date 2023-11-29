@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     auto program_mdata = emu.program_mdata();
     
-    
+    emu.start();
 
     std::cout << std::hex << program_mdata.segment_base << " " << std::hex << program_mdata.brk_addr << " " << "hi\n";
 
