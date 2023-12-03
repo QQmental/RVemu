@@ -49,7 +49,11 @@ public:
 
 };
 
-bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd)
+static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
+static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
+static void Regist_RVI_cmd(RISC_V_Instruction_map &);
+
+inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd)
 {
     nRISC_V_decompose::eOpecode_type garbage;
     
@@ -61,18 +65,12 @@ bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::in
     return Regist_cmd(cmd_mask, attr);
 }
 
-bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, const RISC_V_Instruction_map::Command_attribute &attr)
+inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, const RISC_V_Instruction_map::Command_attribute &attr)
 {
     auto f = m_map.emplace(cmd_mask, attr.cmd);
 
     return f.second == true;
 }
-
-
-static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
-static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
-static void Regist_RVI_cmd(RISC_V_Instruction_map &);
-
 
 static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
 {
@@ -122,22 +120,22 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
         CHECK_ERROR(regist_success == true);\
     }while(0);
 
-    REGIST_CMD(0b00000000000000000000'00000'0110111, LUI, U);
+    REGIST_CMD(0b00000000000000000000'00000'0110111, LUI,   U);
     REGIST_CMD(0b00000000000000000000'00000'0010111, AUIPC, U);
 
     REGIST_CMD(0b00000000000000000000'00000'1101111, JAL, J);
     
-    REGIST_CMD(0b000000000000'00000'000'00000'1100111, JALR, I);
-    REGIST_CMD(0b000000000000'00000'000'00000'0000111, LB,   I);
-    REGIST_CMD(0b000000000000'00000'001'00000'0000111, LH,   I);
-    REGIST_CMD(0b000000000000'00000'010'00000'0000111, LW,   I);
-    REGIST_CMD(0b000000000000'00000'100'00000'0000111, LBU,  I);
-    REGIST_CMD(0b000000000000'00000'101'00000'0000111, LHU,  I);                
+    REGIST_CMD(0b000000000000'00000'000'00000'1100111, JALR,  I);
+    REGIST_CMD(0b000000000000'00000'000'00000'0000011, LB,    I);
+    REGIST_CMD(0b000000000000'00000'001'00000'0000011, LH,    I);
+    REGIST_CMD(0b000000000000'00000'010'00000'0000011, LW,    I);
+    REGIST_CMD(0b000000000000'00000'100'00000'0000011, LBU,   I);
+    REGIST_CMD(0b000000000000'00000'101'00000'0000011, LHU,   I);                
     REGIST_CMD(0b000000000000'00000'000'00000'0010011, ADDI,  I); 
     REGIST_CMD(0b000000000000'00000'010'00000'0010011, SLTI,  I);
-    REGIST_CMD(0b000000000000'00000'011'00000'0010011, SLTIU,  I);
+    REGIST_CMD(0b000000000000'00000'011'00000'0010011, SLTIU, I);
     REGIST_CMD(0b000000000000'00000'100'00000'0010011, XORI,  I);
-    REGIST_CMD(0b000000000000'00000'110'00000'0010011, ORI,  I);
+    REGIST_CMD(0b000000000000'00000'110'00000'0010011, ORI,   I);
     REGIST_CMD(0b000000000000'00000'111'00000'0010011, ANDI,  I);
 
     //RV64 SLLI, SRLI, SRAI share same format with those in RV32
@@ -150,23 +148,23 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     REGIST_CMD(0b000000000001'00000'000'00000'1110011, EBREAK,  I);
 
     //RV64I
-    REGIST_CMD(0b000000000000'00000'110'00000'0000011, LWU,  I);
-    REGIST_CMD(0b000000000000'00000'011'00000'0000011, LD,  I);
-    REGIST_CMD(0b000000000000'00000'000'00000'0011011, ADDIW,  I);  
-    REGIST_CMD(0b000000000000'00000'001'00000'0011011, SLLIW,  I);
-    REGIST_CMD(0b000000000000'00000'101'00000'0011011, SRLIW,  I);
-    REGIST_CMD(0b010000000000'00000'101'00000'0011011, SRAIW,  I);
+    REGIST_CMD(0b000000000000'00000'110'00000'0000011, LWU,   I);
+    REGIST_CMD(0b000000000000'00000'011'00000'0000011, LD,    I);
+    REGIST_CMD(0b000000000000'00000'000'00000'0011011, ADDIW, I);  
+    REGIST_CMD(0b000000000000'00000'001'00000'0011011, SLLIW, I);
+    REGIST_CMD(0b000000000000'00000'101'00000'0011011, SRLIW, I);
+    REGIST_CMD(0b010000000000'00000'101'00000'0011011, SRAIW, I);
 
 
     REGIST_CMD(0b0000000'00000'00000'000'00000'0110011, ADD,  R);    
     REGIST_CMD(0b0100000'00000'00000'000'00000'0110011, SUB,  R); 
     REGIST_CMD(0b0000000'00000'00000'001'00000'0110011, SLL,  R);
     REGIST_CMD(0b0000000'00000'00000'010'00000'0110011, SLT,  R);
-    REGIST_CMD(0b0000000'00000'00000'011'00000'0110011, SLTU,  R);
+    REGIST_CMD(0b0000000'00000'00000'011'00000'0110011, SLTU, R);
     REGIST_CMD(0b0000000'00000'00000'100'00000'0110011, XOR,  R);
     REGIST_CMD(0b0000000'00000'00000'101'00000'0110011, SRL,  R);
     REGIST_CMD(0b0100000'00000'00000'101'00000'0110011, SRA,  R);
-    REGIST_CMD(0b0000000'00000'00000'110'00000'0110011, OR,  R);
+    REGIST_CMD(0b0000000'00000'00000'110'00000'0110011, OR,   R);
     REGIST_CMD(0b0000000'00000'00000'111'00000'0110011, AND,  R);
 
     //RV64I
@@ -177,12 +175,12 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     REGIST_CMD(0b0100000'00000'00000'101'00000'0111011, SRAW,  R);
 
 
-    REGIST_CMD(0b0000000'00000'00000'000'00000'1100011, BEQ,  S);
-    REGIST_CMD(0b0000000'00000'00000'001'00000'1100011, BNE,  S);
-    REGIST_CMD(0b0000000'00000'00000'100'00000'1100011, BLT,  S);
-    REGIST_CMD(0b0000000'00000'00000'101'00000'1100011, BGE,  S);
-    REGIST_CMD(0b0000000'00000'00000'110'00000'1100011, BLTU, S);
-    REGIST_CMD(0b0000000'00000'00000'111'00000'1100011, BGEU, S);
+    REGIST_CMD(0b0000000'00000'00000'000'00000'1100011, BEQ,  B);
+    REGIST_CMD(0b0000000'00000'00000'001'00000'1100011, BNE,  B);
+    REGIST_CMD(0b0000000'00000'00000'100'00000'1100011, BLT,  B);
+    REGIST_CMD(0b0000000'00000'00000'101'00000'1100011, BGE,  B);
+    REGIST_CMD(0b0000000'00000'00000'110'00000'1100011, BLTU, B);
+    REGIST_CMD(0b0000000'00000'00000'111'00000'1100011, BGEU, B);
     REGIST_CMD(0b0000000'00000'00000'000'00000'0100011, SB,   S);
     REGIST_CMD(0b0000000'00000'00000'001'00000'0100011, SH,   S);
     REGIST_CMD(0b0000000'00000'00000'010'00000'0100011, SW,   S);    
@@ -248,6 +246,7 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
         break;
 
         case 0b0000011:
+        case 0b1100111:
             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
             *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
         break;
@@ -357,17 +356,14 @@ void RISC_V_Emulator::start()
 
             auto it_instr_cmd = m_instruction_map->m_map.find(masked_instruction);
 
-            printf("mask %ld\n",masked_instruction);
+            //printf("mask %d\n",masked_instruction);
             CHECK_ERROR(it_instr_cmd != m_instruction_map->m_map.end());
 
             cmd = it_instr_cmd->second;
             
             next_pc = reg_file.pc + 4;
         }
-        printf("test: %x %x\n",reg_file.pc , instruction);
-        //06e000ef jal	101bc <main>, jump to main, then just stop
-        if (instruction == 0x06e000ef)
-            break;
+        //printf("test: %lx %x\n",reg_file.pc , instruction);
 
         nRISC_V_cmd::Instruction_package instr_pkg(exec_component, next_pc, m_CPU_Archietecture);
 
@@ -376,7 +372,7 @@ void RISC_V_Emulator::start()
         // x0 is hard wired 0
         reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x0] = 0;
 
-        reg_file.pc = next_pc;
+        reg_file.pc = instr_pkg.next_pc;
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::finish)
             break;

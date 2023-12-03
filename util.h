@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define FATALF(fmt, ...) (fprintf(stderr, "fatal: %s:%d " fmt, __FILE__, __LINE__, __VA_ARGS__), exit(1))
+#define FATALF(fmt, ...) (fprintf(stderr, "fatal: %s:%d " fmt, __FILE__, __LINE__, __VA_ARGS__), abort())
 
 
 #ifdef NDEBUG
@@ -55,8 +55,8 @@ void Swap_endian(integer_t &num)
         Swap_endian(*reinterpret_cast<uint_type*>(&num));
         return;
     }
-    else
-        static_assert(0, "exception: unspecialized Swap_endian(unsigned &num) is called \n");
+    else// "exception: unspecialized Swap_endian(unsigned &num) is called \n"
+        assert(0);
     
 
 }
@@ -94,4 +94,4 @@ inline void Swap_endian(uint64_t &num)
    Swap_endian(ptr[1]);
 }
 
-};
+}

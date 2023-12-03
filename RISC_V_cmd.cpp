@@ -284,7 +284,7 @@ void nRISC_V_cmd::LUI(Instruction_package &instr_pkg)
 {
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = instr_pkg.RV_instr_component.imm << 12;
+    rd_val = instr_pkg.RV_instr_component.imm;
     
     if constexpr(nRISC_V_cmd::gXLEN == 64)
         rd_val = Signed_extend<Int_t, 32>(rd_val);
@@ -294,7 +294,7 @@ void nRISC_V_cmd::LUI(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::AUIPC(Instruction_package &instr_pkg)
 {
-    auto imm = Signed_extend<Int_t, 32>(instr_pkg.RV_instr_component.imm << 20);
+    auto imm = Signed_extend<Int_t, 32>(instr_pkg.RV_instr_component.imm);
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -483,10 +483,12 @@ void nRISC_V_cmd::SB(Instruction_package &instr_pkg)
 
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
-    uint8_t val = rs1_val & 0xFF;
-    
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+
     if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(val);
+        nUtil::Swap_endian(rs2_val);
+    
+    uint8_t val = rs2_val & 0xFF;
     
     instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
 }
@@ -497,10 +499,12 @@ void nRISC_V_cmd::SH(Instruction_package &instr_pkg)
 
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
-    uint16_t val = rs1_val & 0xFFFF;
-    
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+
     if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(val);
+        nUtil::Swap_endian(rs2_val);
+
+    uint16_t val = rs2_val & 0xFFFF;
     
     instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
 }
@@ -511,11 +515,13 @@ void nRISC_V_cmd::SW(Instruction_package &instr_pkg)
 
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
-    uint32_t val = rs1_val & 0xFFFF'FFFF;
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
     
     if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(val);
-    
+        nUtil::Swap_endian(rs2_val);
+
+    uint32_t val = rs2_val & 0xFFFF'FFFF;
+
     instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
 }
 
@@ -525,11 +531,13 @@ void nRISC_V_cmd::SD(Instruction_package &instr_pkg)
 
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
-    uint64_t val = rs1_val & 0xFFFF'FFFF'FFFF'FFFF;
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
     
     if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(val);
+        nUtil::Swap_endian(rs2_val);
     
+    uint64_t val = rs2_val & 0xFFFF'FFFF'FFFF'FFFF;
+
     instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
 }
 
@@ -607,7 +615,7 @@ void nRISC_V_cmd::BGEU(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::JAL(Instruction_package &instr_pkg)
 {
-    auto se_imm = Signed_extend<Int_t, 21>(instr_pkg.RV_instr_component.imm);
+    auto se_imm = Signed_extend<Int_t, 32>(instr_pkg.RV_instr_component.imm);
     
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 

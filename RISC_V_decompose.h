@@ -154,7 +154,7 @@ inline void Decompose_Btype_instruction(RV_Instr_component &result, const RISC_V
     auto imm_10_5 = Extract_portion_of_instruction(instruction, 30, 25);
     auto imm_4_1 = Extract_portion_of_instruction(instruction, 11, 8);
     auto imm_11 = Extract_portion_of_instruction(instruction, 7, 7);
-    result.imm = (imm_12 << 12) | (imm_10_5 << 5) | (imm_4_1 << 1) | imm_11;
+    result.imm = (imm_12 << 12) | (imm_10_5 << 5) | (imm_4_1 << 1) | (imm_11 << 11);
 }
 
 inline void Decompose_Utype_instruction(RV_Instr_component &result, const RISC_V_Instr_t &instruction)
@@ -177,4 +177,4 @@ inline void Decompose_Jtype_instruction(RV_Instr_component &result, const RISC_V
     auto imm_19_12 = Extract_portion_of_instruction(instruction, 19, 12);
     result.imm = (imm_20 << 20) | (imm_10_1 << 1) | (imm_11 << 11) | (imm_19_12 << 12);
 }
-};
+}

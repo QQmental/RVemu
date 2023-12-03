@@ -74,6 +74,7 @@ static RISC_V_Instr_t Parse_J_imm(RISC_V_Instr_t instruction)
     ret = (imm_11 << 11) | (imm_4 << 4) | (imm_9_8 << 8) | (imm_10 << 10) | (imm_6 << 6) | \
     (imm_7 << 7) | (imm_3_1 << 1) | (imm_5 << 5);
 
+    
     return ret;
 }
 
@@ -313,6 +314,7 @@ static bool unzip_001(RISC_V_Instr_t instruction,
                 }
            }
         }
+        break;
         case 0b10:
         {
             /*C.FLDSP (RV32/64) C.LQSP(RV128)*/
@@ -636,9 +638,9 @@ static bool unzip_100(RISC_V_Instr_t instruction,
             {
                 case 0b0:
                 {
-                    if(component.rs2 != 0)
+                    if(component.rs2 == 0)
                     {
-                        if (component.rs1 != 0)
+                        if (component.rs1 == 0)
                             nUtil::TODO("reserved function\n");                            
                         else
                         {
@@ -649,7 +651,7 @@ static bool unzip_100(RISC_V_Instr_t instruction,
                     }
                     else
                     {
-                        if (component.rd != 0)
+                        if (component.rd == 0)
                             *cmd = cmd_map.C_HINT();                            
                         else
                         {
@@ -675,7 +677,7 @@ static bool unzip_100(RISC_V_Instr_t instruction,
                         else
                         {
                             *cmd = cmd_map.C_JALR();
-                            component.rs1 = RV_reg_file::x1;
+                            component.rd = RV_reg_file::x1;
                             component.imm = 0;
                         }
                     }
@@ -854,7 +856,7 @@ static bool unzip_111(RISC_V_Instr_t instruction,
             if constexpr(nRISC_V_cmd::gXLEN == 32)
             {
                 *cmd = cmd_map.C_FSWSP();
-                component.rs1 = RV_reg_file::x0;
+                component.rs1 = RV_reg_file::x2;
                 component.rs2 = cmprs_component.rs2;
                 component.imm = (EPOI(cmprs_component.imm, 5, 2) << 2)
                               | (EPOI(cmprs_component.imm, 1, 0) << 6);
@@ -862,7 +864,7 @@ static bool unzip_111(RISC_V_Instr_t instruction,
             else
             {
                 *cmd = cmd_map.C_SDSP();
-                component.rs1 = RV_reg_file::x0;
+                component.rs1 = RV_reg_file::x2;
                 component.rs2 = cmprs_component.rs2;
                 component.imm = (EPOI(cmprs_component.imm, 5, 3) << 3)
                               | (EPOI(cmprs_component.imm, 2, 0) << 6);

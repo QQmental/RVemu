@@ -1,6 +1,8 @@
 #include <string>
+#include <string.h>
 #include <assert.h>
 #include "BUS.h"
+
 
 using namespace nRISC_V_cpu_spec;
 

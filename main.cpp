@@ -17,7 +17,7 @@
 
 int main(int argc, char *argv[])
 {
-    RISC_V_Emulator emu("test3");
+    RISC_V_Emulator emu("test2");
 
     auto program_mdata = emu.program_mdata();
     
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     std::cout << std::hex << program_mdata.entry_point << " " << \
     std::hex << emu.CPU_attribute().RISC_V_attributes.Tag_RISCV_stack_align.second << " " << "hi\n";
 
-    printf("%lu %d hi\n", emu.CPU_attribute().xlen, emu.CPU_attribute().endian);
+    printf("%u %d hi\n", emu.CPU_attribute().xlen, emu.CPU_attribute().endian);
 
     emu.start();
     

@@ -219,7 +219,7 @@ void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_A
             break;             
             
             default :
-                printf("??? tag %d cur_offset %d\n", sub_sub_section_tag, cur_actual_attr_offset);
+                printf("??? tag %d cur_offset %lu\n", sub_sub_section_tag, cur_actual_attr_offset);
                 assert(0);
         }
         cur_actual_attr_offset += tag_val_len;
