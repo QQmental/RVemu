@@ -1,6 +1,6 @@
 make = mingw32-make
 cc = g++
-CPP_FLAG = -std=c++17 -g -pedantic -Wparentheses -DXLEN=64 -Werror -MMD
+CPP_FLAG = -std=c++17 -g -pedantic -Wparentheses -DXLEN=32 -Werror -MMD
 
 SRCS = BUS.cpp main.cpp RISC_V_cmd.cpp RISC_V_emu.cpp RISC_V_load_guest.cpp \
 RISC_V_unzip_instr.cpp
@@ -10,6 +10,12 @@ OBJS= $(SRCS:%.cpp=%.o)
 DEPS = $(OBJS:%.o=%.d)
 
 BIN = main.exe
+
+RM = rm
+
+ifeq ($(make), mingw32-make)
+	RM = DEL
+endif
 
 .PHONY: clean all
 
@@ -40,5 +46,5 @@ RISC_V_unzip_instr.o :RISC_V_unzip_instr.cpp
 -include $(DEPS)
 
 clean:
-	$(foreach dep, $(DEPS), DEL $(dep))
-	$(foreach obj, $(OBJS), DEL $(obj))
+	$(foreach dep, $(DEPS), $(RM) $(dep))
+	$(foreach obj, $(OBJS), $(RM) $(obj))
