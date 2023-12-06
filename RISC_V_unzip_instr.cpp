@@ -138,6 +138,7 @@ static void Decompose_CA(RISC_V_Instr_t instruction, Compressed_instr_component 
 {
     component.funct6 = EPOI(instruction, 15, 10);
     component.rd = component.rs1 = EPOI(instruction, 9, 7);
+    component.funct2 = EPOI(instruction, 6, 5);
     component.rs2 = EPOI(instruction, 4, 2);    
     component.opcode = EPOI(instruction, 1, 0);    
 }
@@ -227,7 +228,7 @@ static bool unzip_000(RISC_V_Instr_t instruction,
                 {
                     *cmd = cmd_map.C_SLLI();
                     component.rd = component.rs1 = cmprs_component.rd;
-                    component.imm = component.imm;
+                    component.imm = cmprs_component.imm;
                 }
 
                 if constexpr(nRISC_V_cmd::gXLEN == 32)
@@ -414,7 +415,7 @@ static bool unzip_011(RISC_V_Instr_t instruction,
             }
             else
             {
-                Decompose_CI(instruction, cmprs_component);
+                Decompose_CL(instruction, cmprs_component);
                 *cmd = cmd_map.C_LD();
                 component.rd = cmprs_component.rd + RV_reg_file::x8;
                 component.rs1 = cmprs_component.rs1 + RV_reg_file::x8;

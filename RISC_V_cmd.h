@@ -30,8 +30,8 @@ struct Exec_component
                    BUS &in_bus, 
                    const nRISC_V_cpu_spec::RV_Instr_component &in_component)
     : regs(in_regs), 
-      bus(in_bus),
-      RV_instr_component(in_component)
+      RV_instr_component(in_component),
+      bus(in_bus)
     {
 
     }

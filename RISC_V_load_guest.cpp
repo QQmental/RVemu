@@ -22,6 +22,12 @@ constexpr uint32_t Tag_file = 1;
 constexpr uint32_t Tag_RISCV_stack_align = 4;
 constexpr uint32_t Tag_RISCV_arch = 5;
 constexpr uint32_t Tag_RISCV_unaligned_access = 6;
+//Deprecated
+constexpr uint32_t Tag_RISCV_priv_spec = 8;
+//Deprecated
+constexpr uint32_t Tag_RISCV_priv_spec_minor = 10;
+//Deprecated
+constexpr uint32_t Tag_RISCV_priv_spec_revision = 12;
 constexpr uint32_t Tag_RISCV_atomic_abi = 14;
 constexpr uint32_t Tag_RISCV_x3_reg_usage = 16;
 
@@ -192,6 +198,9 @@ void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_A
         
         switch(sub_sub_section_tag)
         {
+            // used for read Deprecated tag
+            uint32_t garbage;
+
             case Tag_RISCV_stack_align:
                  attr.Tag_RISCV_stack_align.first = true;
                  tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_stack_align.second);
@@ -208,6 +217,12 @@ void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_A
                  tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_unaligned_access.second);           
             break;
 
+            case Tag_RISCV_priv_spec:
+            case Tag_RISCV_priv_spec_minor:
+            case Tag_RISCV_priv_spec_revision:
+                 tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, garbage);
+            break;
+            
             case Tag_RISCV_atomic_abi:
                  attr.Tag_RISCV_atomic_abi.first = true;                        
                  tag_val_len = Parse_uleb128(sh_RISC_V_attr + cur_actual_attr_offset, 5, attr.Tag_RISCV_atomic_abi.second);

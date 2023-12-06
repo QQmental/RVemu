@@ -52,7 +52,7 @@ void Swap_endian(integer_t &num)
     if constexpr(std::is_signed<decltype(t)>::value == true)
     {
         using uint_type = typename std::make_unsigned<decltype(t)>::type;
-        Swap_endian(*reinterpret_cast<uint_type*>(&num));
+        Swap_endian(*new(&num)uint_type);
         return;
     }
     else// "exception: unspecialized Swap_endian(unsigned &num) is called \n"
@@ -70,7 +70,7 @@ inline void Swap_endian(uint8_t &num)
 template<>
 inline void Swap_endian(uint16_t &num)
 {
-   uint8_t *ptr = reinterpret_cast<uint8_t*>(&num);
+   auto *ptr = new(&num)uint8_t;
    std::swap(ptr[0], ptr[1]);
    Swap_endian(ptr[0]);
    Swap_endian(ptr[1]);
@@ -79,7 +79,7 @@ inline void Swap_endian(uint16_t &num)
 template<>
 inline void Swap_endian(uint32_t &num)
 {
-   uint16_t *ptr = reinterpret_cast<uint16_t*>(&num);
+   auto *ptr = new(&num)uint16_t;
    std::swap(ptr[0], ptr[1]);
    Swap_endian(ptr[0]);
    Swap_endian(ptr[1]);
@@ -88,7 +88,7 @@ inline void Swap_endian(uint32_t &num)
 template<>
 inline void Swap_endian(uint64_t &num)
 {
-   uint32_t *ptr = reinterpret_cast<uint32_t*>(&num);
+   auto *ptr = new(&num)uint32_t;
    std::swap(ptr[0], ptr[1]);
    Swap_endian(ptr[0]);
    Swap_endian(ptr[1]);
