@@ -137,7 +137,8 @@ inline void Decompose_Stype_instruction(RV_Instr_component &result, const RISC_V
     result.opcode = opcode(instruction);
     result.funct3 = funct3(instruction);
     result.rs1 = rs1(instruction);
-
+    result.rs2 = rs2(instruction);
+    
     auto imm_11_5 = Extract_portion_of_instruction(instruction, 31, 25);
     auto imm_4_0 = Extract_portion_of_instruction(instruction, 11, 7);
     result.imm = (imm_11_5 << 5) | imm_4_0;

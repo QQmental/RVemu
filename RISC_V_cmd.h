@@ -144,7 +144,6 @@ void SUBW(Instruction_package &instr_pkg);
 void Illegal_CMD(Instruction_package &instr_pkg);
 void NOP(Instruction_package &instr_pkg);
 void HINT(Instruction_package &instr_pkg);
-
 void C_JAL(Instruction_package &instr_pkg);
 
 /* 

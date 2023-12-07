@@ -55,7 +55,6 @@ void nRISC_V_cmd::BLT(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BGE(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BLTU(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BGEU(Instruction_package &instr_pkg);
-void nRISC_V_cmd::C_J(Instruction_package &instr_pkg);
 void nRISC_V_cmd::JAL(Instruction_package &instr_pkg);
 void nRISC_V_cmd::JALR(Instruction_package &instr_pkg);
 
@@ -86,7 +85,8 @@ void nRISC_V_cmd::SRLW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SRAW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SUBW(Instruction_package &instr_pkg);
 
-
+void nRISC_V_cmd::C_JAL(Instruction_package &instr_pkg);
+void nRISC_V_cmd::C_JALR(Instruction_package &instr_pkg);
 
 
 template <typename ret_Int_t, unsigned B>
@@ -847,19 +847,6 @@ void nRISC_V_cmd::NOP(Instruction_package &instr_pkg)
 void nRISC_V_cmd::HINT(Instruction_package &instr_pkg)
 {
 
-}
-
-void nRISC_V_cmd::C_J(Instruction_package &instr_pkg)
-{
-    CHECK_ERROR(instr_pkg.RV_instr_component.rd == 1);
-
-    auto se_imm = Signed_extend<Int_t, 12>(instr_pkg.RV_instr_component.imm);
-    
-    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
-
-    rd_val = instr_pkg.regs.pc + 4;
-
-    instr_pkg.next_pc = instr_pkg.regs.pc + se_imm;
 }
 
 void nRISC_V_cmd::C_JAL(Instruction_package &instr_pkg)

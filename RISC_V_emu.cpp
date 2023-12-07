@@ -247,6 +247,7 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
 
         case 0b0000011:
         case 0b1100111:
+        case 0b1110011:
             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
             *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
         break;
