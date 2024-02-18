@@ -23,12 +23,14 @@ using Int_t = int64_t;
 using Uint_t = uint64_t;
 using RV_reg_file = RV64_Regster_file;
 using RISC_V_Addr_t = RISC_V_Addr_64_t;
+using RV_int_reg_t = RISC_V_double_word_t;
 
 #elif defined(XLEN) == 32
 using Int_t = int32_t;
 using Uint_t = uint32_t;
 using RV_reg_file = RV32_Regster_file;
 using RISC_V_Addr_t = RISC_V_Addr_32_t;
+using RV_int_reg_t = RISC_V_word_t;
 
 #elif defined(XLEN) == 128
 using Int_t = int128_t;
@@ -40,11 +42,23 @@ using Int_t = int64_t;
 using Uint_t = uint64_t;
 using RV_reg_file = RV64_Regster_file;
 using RISC_V_Addr_t = RISC_V_Addr_64_t;
+using RV_int_reg_t = RISC_V_double_word_t;
 #endif
 
 struct RV_Instr_component
 {
     RISC_V_Instr_t opcode, rd, rs1, rs2, funct3, funct7, imm;
+};
+
+enum gp_reg_abi_name
+{
+    zero, ra, sp, gp, tp,
+    t0, t1, t2,
+    s0, s1,
+    a0, a1, a2, a3, a4, a5, a6, a7,
+    s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,
+    t3, t4, t5, t6,
+    num_gp_regs,
 };
 
 struct RV32_Regster_file

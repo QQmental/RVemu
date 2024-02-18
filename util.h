@@ -56,7 +56,7 @@ void Swap_endian(integer_t &num)
         return;
     }
     else// "exception: unspecialized Swap_endian(unsigned &num) is called \n"
-        assert(0);
+        abort();
     
 
 }

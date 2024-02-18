@@ -1,9 +1,9 @@
 make = make
 cc = g++
-CPP_FLAG = -std=c++17 -g -pedantic -Wparentheses -DXLEN=32 -Werror -MMD -Wall
+CPP_FLAG = -std=c++17 -g -pedantic -Wparentheses -fsanitize=undefined -DXLEN=64 -Werror -MMD -Wall
 
 SRCS = BUS.cpp main.cpp RISC_V_cmd.cpp RISC_V_emu.cpp RISC_V_load_guest.cpp \
-RISC_V_unzip_instr.cpp
+RISC_V_unzip_instr.cpp Syscall.cpp
 
 OBJS= $(SRCS:%.cpp=%.o)
 
@@ -41,6 +41,9 @@ RISC_V_load_guest.o :RISC_V_load_guest.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@
 
 RISC_V_unzip_instr.o :RISC_V_unzip_instr.cpp
+	$(cc) $< $(CPP_FLAG) -c -o $@
+
+Syscall.o :Syscall.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@
 
 -include $(DEPS)

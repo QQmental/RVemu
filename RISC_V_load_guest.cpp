@@ -43,8 +43,11 @@ bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr)
         std::cout << "error: size of the read file is small than a elf64 header\n";
         return false;
     }
-
-    if (*reinterpret_cast<uint32_t*>(hdr) != *reinterpret_cast<const uint32_t*>(ELFMAG))
+          
+    if (auto *magic_ptr = new(hdr)char ; (magic_ptr[0] != '\177') 
+        || (magic_ptr[1] != 'E') 
+        || (magic_ptr[2] != 'L') 
+        || (magic_ptr[3] != 'F'))
     {
         std::cout << "error: probably the file has no elf header \n";
         return false;

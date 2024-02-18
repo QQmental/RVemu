@@ -10,6 +10,8 @@ struct Program_mdata_t
     Elf64_Addr segment_base, brk_addr, entry_point;
     nRISC_V_cpu_spec::RISC_V_Addr_t highest_addr;
     Elf64_Addr stack_pointer_alignment;
+    nRISC_V_cpu_spec::CPU_Attribute *CPU_attributes;
+
 };
 
 class RISC_V_Instruction_map;
@@ -25,11 +27,11 @@ public:
 
     void start();
     const Program_mdata_t& program_mdata() const {return m_program_mdata;}
-    const nRISC_V_cpu_spec::CPU_Attribute& CPU_attribute() const {return m_CPU_Archietecture;}
+    const nRISC_V_cpu_spec::CPU_Attribute& CPU_attribute() const {return m_CPU_archietecture;}
 
 private:
     Program_mdata_t m_program_mdata;
-    nRISC_V_cpu_spec::CPU_Attribute m_CPU_Archietecture;
+    nRISC_V_cpu_spec::CPU_Attribute m_CPU_archietecture;
     std::unique_ptr<char []> m_mem;
     std::unique_ptr<RISC_V_Instruction_map> m_instruction_map;
 

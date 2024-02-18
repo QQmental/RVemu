@@ -486,12 +486,7 @@ void nRISC_V_cmd::SB(Instruction_package &instr_pkg)
 
     auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
 
-    if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(rs2_val);
-    
-    uint8_t val = rs2_val & 0xFF;
-    
-    instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
+    instr_pkg.bus.SB(rs2_val, static_cast<Int_t>(rs1_val) + se_imm);
 }
 
 void nRISC_V_cmd::SH(Instruction_package &instr_pkg)
@@ -501,13 +496,8 @@ void nRISC_V_cmd::SH(Instruction_package &instr_pkg)
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
     auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
-
-    if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(rs2_val);
-
-    uint16_t val = rs2_val & 0xFFFF;
     
-    instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
+    instr_pkg.bus.SH(rs2_val, static_cast<Int_t>(rs1_val) + se_imm);
 }
 
 void nRISC_V_cmd::SW(Instruction_package &instr_pkg)
@@ -517,13 +507,8 @@ void nRISC_V_cmd::SW(Instruction_package &instr_pkg)
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
     auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
-    
-    if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(rs2_val);
 
-    uint32_t val = rs2_val & 0xFFFF'FFFF;
-
-    instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
+    instr_pkg.bus.SW(rs2_val, static_cast<Int_t>(rs1_val) + se_imm);
 }
 
 void nRISC_V_cmd::SD(Instruction_package &instr_pkg)
@@ -533,13 +518,8 @@ void nRISC_V_cmd::SD(Instruction_package &instr_pkg)
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1]; 
 
     auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
-    
-    if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
-        nUtil::Swap_endian(rs2_val);
-    
-    uint64_t val = rs2_val & 0xFFFF'FFFF'FFFF'FFFF;
 
-    instr_pkg.bus.Store_data(reinterpret_cast<const char*>(&val), static_cast<Int_t>(rs1_val) + se_imm, sizeof(val));
+    instr_pkg.bus.SD(rs2_val, static_cast<Int_t>(rs1_val) + se_imm);
 }
 
 void nRISC_V_cmd::BEQ(Instruction_package &instr_pkg)
@@ -661,8 +641,8 @@ void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::ECALL(Instruction_package &instr_pkg)
 {
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
+    instr_pkg.except = nRISC_V_cmd::execution_exception::ecall;
+    std::cout << __func__ << " "<< std::dec << instr_pkg.regs.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::a7] << "\n"; 
 }
 
 void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg)
