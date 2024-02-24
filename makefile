@@ -17,7 +17,7 @@ ifeq ($(make), mingw32-make)
 	RM = DEL
 endif
 
-.PHONY: clean all
+.PHONY: clean all add_test_src
 
 all:$(OBJS) $(BIN)
 	
@@ -51,3 +51,6 @@ Syscall.o :Syscall.cpp
 clean:
 	$(foreach dep, $(DEPS), $(RM) $(dep);)
 	$(foreach obj, $(OBJS), $(RM) $(obj);)
+
+add_test_src:
+	make -C ./test

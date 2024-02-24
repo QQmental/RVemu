@@ -66,7 +66,7 @@ struct RV32_Regster_file
     // program counter of current instruction
     RISC_V_Addr_t pc;
     
-    RISC_V_word_t gp_regs[32];
+    RV_int_reg_t gp_regs[32];
 
     enum reg_num : uint32_t
     {
@@ -90,7 +90,7 @@ struct RV64_Regster_file
     // program counter of current instruction    
     RISC_V_Addr_t pc;
 
-    RISC_V_double_word_t gp_regs[32];
+    RV_int_reg_t gp_regs[32];
 
     enum reg_num : uint32_t
     {

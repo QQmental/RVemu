@@ -118,7 +118,7 @@ void nRISC_V_cmd::ADD(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = static_cast<Int_t>(rs1_val) + static_cast<Int_t>(rs2_val);
+    rd_val = rs1_val + rs2_val;
 }
 
 void nRISC_V_cmd::SUB(Instruction_package &instr_pkg)
@@ -129,7 +129,7 @@ void nRISC_V_cmd::SUB(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = static_cast<Int_t>(rs1_val) - static_cast<Int_t>(rs2_val);
+    rd_val = rs1_val - rs2_val;
 }
 
 void nRISC_V_cmd::SLT(Instruction_package &instr_pkg)
@@ -221,6 +221,7 @@ void nRISC_V_cmd::SRLI(Instruction_package &instr_pkg)
 }
 
 // shift right arithmetic by immediate
+// the original sign bit is copied into the vacated upper bits
 void nRISC_V_cmd::SRAI(Instruction_package &instr_pkg)
 {
     nRISC_V_cpu_spec::RISC_V_Instr_t shamt {};
@@ -234,7 +235,12 @@ void nRISC_V_cmd::SRAI(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = static_cast<Int_t>(rs1_val) >> shamt; 
+    RV_int_reg_t original_sign_bit{};
+
+    if (rs1_val & ((nRISC_V_cpu_spec::RV_int_reg_t)1<<(gXLEN-1)))
+        original_sign_bit = nRISC_V_cpu_spec::RV_int_reg_t(-1);
+
+    rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt));
 }
 
 void nRISC_V_cmd::SLL(Instruction_package &instr_pkg)
@@ -264,7 +270,7 @@ void nRISC_V_cmd::SRL(Instruction_package &instr_pkg)
     else if (nRISC_V_cmd::gXLEN == 64)
         rd_val = rs1_val >> (rs2_val & RISC_V_double_word_t(0b111111));
 }
-
+// the original sign bit is copied into the vacated upper bits
 void nRISC_V_cmd::SRA(Instruction_package &instr_pkg)
 {
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
@@ -273,11 +279,19 @@ void nRISC_V_cmd::SRA(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
+    nRISC_V_cpu_spec::RV_int_reg_t shamt{}, original_sign_bit{0};
+
     if constexpr (nRISC_V_cmd::gXLEN == 32)
-        rd_val = static_cast<Int_t>(rs1_val) >> (rs2_val & RISC_V_double_word_t(0b11111));
-    
+        shamt = rs2_val & nRISC_V_cpu_spec::RV_int_reg_t(0b11111);
     else if (nRISC_V_cmd::gXLEN == 64)
-        rd_val = static_cast<Int_t>(rs1_val) >> (rs2_val & RISC_V_double_word_t(0b111111));
+        shamt = rs2_val & nRISC_V_cpu_spec::RV_int_reg_t(0b111111);
+    else
+        nUtil::TODO("SRA for gXLEN > 64 is not implemented\n");
+    
+    if (rs1_val & ((nRISC_V_cpu_spec::RV_int_reg_t)1<<(gXLEN-1)))
+        original_sign_bit = nRISC_V_cpu_spec::RV_int_reg_t(-1);
+
+    rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt));
 }
 
 
