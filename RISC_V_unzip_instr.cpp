@@ -185,10 +185,10 @@ static bool unzip_000(RISC_V_Instr_t instruction,
                 Decompose_CIW(instruction, cmprs_component);
                 component.rd = cmprs_component.rd + RV_reg_file::reg_num::x8;
                 component.rs1 = RV_reg_file::reg_num::x2;
-                component.imm = (EPOI(instruction, 7, 6) << 4)
-                              | (EPOI(instruction, 5, 2) << 6)
-                              | (EPOI(instruction, 1, 1) << 2)
-                              | (EPOI(instruction, 0, 0) << 3);
+                component.imm = (EPOI(cmprs_component.imm, 7, 6) << 4)
+                              | (EPOI(cmprs_component.imm, 5, 2) << 6)
+                              | (EPOI(cmprs_component.imm, 1, 1) << 2)
+                              | (EPOI(cmprs_component.imm, 0, 0) << 3);
             }
         }
         break;

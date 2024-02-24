@@ -17,7 +17,7 @@
 
 int main(int argc, char *argv[])
 {
-    RISC_V_Emulator emu("./test2");
+    RISC_V_Emulator emu("./test.exe");
 
     auto program_mdata = emu.program_mdata();
     

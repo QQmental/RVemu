@@ -78,6 +78,7 @@ static uint64_t sys_brk(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdat
     if (addr == 0)
         addr = program_mdata.brk_addr;
     assert(addr >= program_mdata.segment_base);
+    assert(addr <= program_mdata.highest_addr);
     printf("addr: %lu \n",addr);
     program_mdata.brk_addr = addr;
 
