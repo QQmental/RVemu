@@ -237,7 +237,7 @@ void nRISC_V_cmd::SRAI(Instruction_package &instr_pkg)
 
     RV_int_reg_t original_sign_bit{};
 
-    if (rs1_val & ((nRISC_V_cpu_spec::RV_int_reg_t)1<<(gXLEN-1)))
+    if (static_cast<Int_t>(rs1_val) < 0)
         original_sign_bit = nRISC_V_cpu_spec::RV_int_reg_t(-1);
 
     rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt));
@@ -288,7 +288,7 @@ void nRISC_V_cmd::SRA(Instruction_package &instr_pkg)
     else
         nUtil::TODO("SRA for gXLEN > 64 is not implemented\n");
     
-    if (rs1_val & ((nRISC_V_cpu_spec::RV_int_reg_t)1<<(gXLEN-1)))
+    if (static_cast<Int_t>(rs1_val) < 0)
         original_sign_bit = nRISC_V_cpu_spec::RV_int_reg_t(-1);
 
     rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt));
@@ -763,7 +763,12 @@ void nRISC_V_cmd::SRAIW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    auto val = static_cast<int32_t>(lower32_rs1_val) >> shamt;
+    uint32_t original_sign_bit{};
+
+    if (static_cast<Int_t>(rs1_val) < 0)
+        original_sign_bit = -1;
+
+    auto val = (lower32_rs1_val >> shamt) | (original_sign_bit << (32 - shamt)); 
 
     rd_val = Signed_extend<int64_t, 32>(val) ;
 }
