@@ -20,7 +20,6 @@ endif
 .PHONY: clean all add_test_src
 
 all:$(OBJS) $(BIN)
-	
 
 $(BIN) : $(OBJS)
 	$(cc) $(OBJS) $(CPP_FLAG)  -o $@
@@ -51,6 +50,7 @@ Syscall.o :Syscall.cpp
 clean:
 	$(foreach dep, $(DEPS), $(RM) $(dep);)
 	$(foreach obj, $(OBJS), $(RM) $(obj);)
+	$(RM) $(wildcard ./*.exe)
 
 add_test_src:
 	make -C ./test

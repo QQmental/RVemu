@@ -29,7 +29,7 @@ struct Exec_component
 {
     Exec_component(nRISC_V_cpu_spec::RV_reg_file &in_regs, 
                    BUS &in_bus, 
-                   const nRISC_V_cpu_spec::RV_Instr_component &in_component)
+                   nRISC_V_cpu_spec::RV_Instr_component &in_component)
     : regs(in_regs), 
       RV_instr_component(in_component),
       bus(in_bus)
@@ -37,7 +37,7 @@ struct Exec_component
 
     }
     nRISC_V_cpu_spec::RV_reg_file &regs;
-    const nRISC_V_cpu_spec::RV_Instr_component &RV_instr_component;
+    nRISC_V_cpu_spec::RV_Instr_component &RV_instr_component;
     BUS &bus;
 };
 

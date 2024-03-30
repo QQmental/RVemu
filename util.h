@@ -45,20 +45,20 @@ static inline eEndian gHOST_ENDIAN = []()
 template<typename integer_t>
 void Swap_endian(integer_t &num)
 {
-    auto t = num;
+    using num_t = std::decay_t<integer_t>;
 
-    static_assert(std::is_integral<decltype(t)>::value == true, "num should be an integer\n");
+    static_assert(std::is_integral<num_t>::value == true, "num should be an integer\n");
 
-    if constexpr(std::is_signed<decltype(t)>::value == true)
+    if constexpr(std::is_signed<num_t>::value == true)
     {
-        using uint_type = typename std::make_unsigned<decltype(t)>::type;
-        Swap_endian(*new(&num)uint_type);
+        using uint_type = typename std::make_unsigned<num_t>::type;
+        uint_type tmp = num;
+        Swap_endian(tmp);
+        num = tmp;
         return;
     }
-    else// "exception: unspecialized Swap_endian(unsigned &num) is called \n"
-        abort();
-    
-
+    else
+        static_assert(sizeof(num) < 0, "unspecialized Swap_endian(unsigned &num) is called\n");
 }
 
 template<>
@@ -70,28 +70,28 @@ inline void Swap_endian(uint8_t &num)
 template<>
 inline void Swap_endian(uint16_t &num)
 {
-   auto *ptr = new(&num)uint8_t;
-   std::swap(ptr[0], ptr[1]);
-   Swap_endian(ptr[0]);
-   Swap_endian(ptr[1]);
+   uint8_t upper = num >> 8, lower = num & 0xFF;
+   Swap_endian(upper);
+   Swap_endian(lower);
+   num = (((uint16_t)lower) << 8) | upper;
 }
 
 template<>
 inline void Swap_endian(uint32_t &num)
 {
-   auto *ptr = new(&num)uint16_t;
-   std::swap(ptr[0], ptr[1]);
-   Swap_endian(ptr[0]);
-   Swap_endian(ptr[1]);
+   uint16_t upper = num >> 16, lower = num & 0xFFFF;
+   Swap_endian(upper);
+   Swap_endian(lower);
+   num = (((uint32_t)lower) << 16) | upper;
 }
 
 template<>
 inline void Swap_endian(uint64_t &num)
 {
-   auto *ptr = new(&num)uint32_t;
-   std::swap(ptr[0], ptr[1]);
-   Swap_endian(ptr[0]);
-   Swap_endian(ptr[1]);
+   uint32_t upper = num >> 32, lower = num & 0xFFFFFFFF;
+   Swap_endian(upper);
+   Swap_endian(lower);
+   num = (((uint64_t)lower) << 32) | upper;
 }
 
 }

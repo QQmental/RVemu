@@ -31,6 +31,7 @@ enum eCPU_state : uint16_t
 };
 
 
+
 class RISC_V_Instruction_map
 {
 public:
@@ -50,10 +51,6 @@ public:
 
 };
 
-static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
-static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
-static void Regist_RVI_cmd(RISC_V_Instruction_map &);
-
 inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd)
 {
     nRISC_V_decompose::eOpecode_type garbage;
@@ -72,6 +69,10 @@ inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, const RI
 
     return f.second == true;
 }
+
+static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
+static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
+static void Regist_RVI_cmd(RISC_V_Instruction_map &);
 
 static void Init_basic_CPU_attributes(std::string program_name, const Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
 {
@@ -104,6 +105,7 @@ static void Init_basic_CPU_attributes(std::string program_name, const Program_md
     CPU_attribute.highest_addr = program_mdata.highest_addr;
     CPU_attribute.base_addr = program_mdata.segment_base;
 }
+
 
 static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
 {
