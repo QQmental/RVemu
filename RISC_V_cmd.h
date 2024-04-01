@@ -15,6 +15,19 @@ constexpr uint32_t gXLEN = sizeof(nRISC_V_cpu_spec::Int_t) * std::numeric_limits
 
 using instr_cmd_t = void (*)(nRISC_V_cmd::Instruction_package&);
 
+inline const auto gCHECK_DOUBLE_XLEN_T = []()->auto
+{
+    if constexpr(nRISC_V_cmd::gXLEN == 32)
+        return std::pair<uint64_t, int64_t>(0, 0);
+    else if (nRISC_V_cmd::gXLEN == 64)
+        return std::pair<__uint128_t, __int128_t>(0, 0);
+    else
+        nUtil::FATAL("no double xlen support for rv128");
+};
+
+using gDOUBLE_XLEN_T = decltype(gCHECK_DOUBLE_XLEN_T().first);
+using gSDOUBLE_XLEN_T = decltype(gCHECK_DOUBLE_XLEN_T().second);
+
 enum execution_exception : uint16_t
 {
     none = 0,
@@ -141,6 +154,12 @@ void SLLW(Instruction_package &instr_pkg);
 void SRLW(Instruction_package &instr_pkg);
 void SRAW(Instruction_package &instr_pkg);
 void SUBW(Instruction_package &instr_pkg);
+
+void MUL(Instruction_package &instr_pkg);
+void MULH(Instruction_package &instr_pkg);
+void MULHSU(Instruction_package &instr_pkg);
+void MULHU(Instruction_package &instr_pkg);
+void MULW(Instruction_package &instr_pkg);
 
 void Illegal_CMD(Instruction_package &instr_pkg);
 void NOP(Instruction_package &instr_pkg);

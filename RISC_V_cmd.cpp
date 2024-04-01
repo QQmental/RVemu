@@ -44,6 +44,7 @@ void nRISC_V_cmd::AND(Instruction_package &instr_pkg);
 void nRISC_V_cmd::LB(Instruction_package &instr_pkg);
 void nRISC_V_cmd::LH(Instruction_package &instr_pkg);
 void nRISC_V_cmd::LW(Instruction_package &instr_pkg);
+void nRISC_V_cmd::LD(Instruction_package &instr_pkg);
 void nRISC_V_cmd::LBU(Instruction_package &instr_pkg);
 void nRISC_V_cmd::LHU(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SB(Instruction_package &instr_pkg);
@@ -87,6 +88,12 @@ void nRISC_V_cmd::SUBW(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::C_JAL(Instruction_package &instr_pkg);
 void nRISC_V_cmd::C_JALR(Instruction_package &instr_pkg);
+
+void nRISC_V_cmd::MUL(Instruction_package &instr_pkg);
+void nRISC_V_cmd::MULH(Instruction_package &instr_pkg);
+void nRISC_V_cmd::MULHSU(Instruction_package &instr_pkg);
+void nRISC_V_cmd::MULHU(Instruction_package &instr_pkg);
+void nRISC_V_cmd::MULW(Instruction_package &instr_pkg);
 
 
 template <typename ret_Int_t, unsigned B>
@@ -877,4 +884,78 @@ void nRISC_V_cmd::C_JALR(Instruction_package &instr_pkg)
 
     // imm should be equal to 0, so it's written in 'rs1_val + 0'
     instr_pkg.next_pc = (rs1_val + 0) & (~0x1);
+}
+
+void nRISC_V_cmd::MUL(Instruction_package &instr_pkg)
+{
+    auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    rd_val = rs1_val * rs2_val;
+}
+
+void nRISC_V_cmd::MULH(Instruction_package &instr_pkg)
+{
+    nRISC_V_cmd::gDOUBLE_XLEN_T rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    nRISC_V_cmd::gDOUBLE_XLEN_T rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+
+    auto negate = (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs1_val) < 0) != (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs2_val) < 0);
+
+    if (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs1_val) < 0)
+        rs1_val = -rs1_val;
+    if (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs2_val) < 0)
+        rs2_val = -rs2_val;
+
+    auto product = negate ? rs1_val * rs2_val * -1 : rs1_val * rs2_val;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    rd_val = product >> nRISC_V_cmd::gXLEN;
+}
+
+void nRISC_V_cmd::MULHSU(Instruction_package &instr_pkg)
+{
+    nRISC_V_cmd::gDOUBLE_XLEN_T rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    nRISC_V_cmd::gDOUBLE_XLEN_T rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+
+    auto negate = ((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs1_val) < 0;
+
+    if (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs1_val) < 0)
+        rs1_val =  -rs1_val;
+
+    auto product = negate ? rs1_val * rs2_val * -1 : rs1_val * rs2_val;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    rd_val = product >> nRISC_V_cmd::gXLEN;
+}
+
+void nRISC_V_cmd::MULHU(Instruction_package &instr_pkg)
+{
+    nRISC_V_cmd::gDOUBLE_XLEN_T rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    nRISC_V_cmd::gDOUBLE_XLEN_T rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    rd_val = (rs1_val*rs2_val) >> (nRISC_V_cmd::gXLEN);
+}
+
+void nRISC_V_cmd::MULW(Instruction_package &instr_pkg)
+{
+    if constexpr(nRISC_V_cmd::gXLEN != 64)
+        nUtil::FATAL("MULW is for rv64");
+    
+    auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    rd_val = Signed_extend<Int_t, 32>(rs1_val*rs2_val);
 }

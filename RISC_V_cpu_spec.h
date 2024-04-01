@@ -47,7 +47,13 @@ using RV_int_reg_t = RISC_V_double_word_t;
 
 struct RV_Instr_component
 {
-    RISC_V_Instr_t opcode, rd, rs1, rs2, funct3, funct7, imm;
+    RISC_V_Instr_t opcode:7,
+                   rd:5,
+                   rs1:5,
+                   rs2:5, 
+                   funct3:3,
+                   funct7:7,
+                   imm;
 };
 
 enum gp_reg_abi_name

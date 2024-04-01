@@ -108,8 +108,9 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Pr
             f = std::fseek(file_stream, phdr.p_offset, SEEK_SET);
             assert(f == 0);
             
-            std::fread(reinterpret_cast<void*>(&mem[phdr.p_vaddr - program_mdata.segment_base]), phdr.p_memsz, 1, file_stream);
-            
+            auto sz = std::fread(reinterpret_cast<void*>(&mem[phdr.p_vaddr - program_mdata.segment_base]), phdr.p_memsz, 1, file_stream);
+            assert(sz != 0);
+
             //set memory to be 0 if its address exceeds p_filesz area
             memset(reinterpret_cast<void*>(&mem[phdr.p_vaddr - program_mdata.segment_base + phdr.p_filesz]), 
                    0,
@@ -123,7 +124,9 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Pr
 
             sh_RISC_V_attr = new uint8_t[phdr.p_filesz];
 
-            std::fread(reinterpret_cast<void*>(sh_RISC_V_attr), phdr.p_filesz, 1, file_stream);
+            auto sz = std::fread(reinterpret_cast<void*>(sh_RISC_V_attr), phdr.p_filesz, 1, file_stream);
+
+            assert(sz != 0);
         }
     }
 

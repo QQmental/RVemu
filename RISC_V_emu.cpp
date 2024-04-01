@@ -35,6 +35,8 @@ enum eCPU_state : uint16_t
 class RISC_V_Instruction_map
 {
 public:
+    RISC_V_Instruction_map() = default;
+    ~RISC_V_Instruction_map() = default;
     struct Command_attribute
     {
         nRISC_V_cmd::instr_cmd_t cmd;
@@ -43,29 +45,16 @@ public:
     };
     
     // return true if the cmd hasn't been inserted before Regist_cmd is called.
-    bool Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd);
     bool Regist_cmd(RISC_V_Instr_t cmd_mask, const RISC_V_Instruction_map::Command_attribute &attr);
     
     // a map for non-compressed instructions
-    std::unordered_map<RISC_V_Instr_t, nRISC_V_cmd::instr_cmd_t> m_map;
+    std::unordered_map<RISC_V_Instr_t, nRISC_V_cmd::instr_cmd_t> map;
 
 };
 
-inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, nRISC_V_cmd::instr_cmd_t cmd)
-{
-    nRISC_V_decompose::eOpecode_type garbage;
-    
-    RISC_V_Instruction_map::Command_attribute attr;
-    attr.cmd = cmd;
-    attr.op_type = garbage;
-    attr.name = "";
-    
-    return Regist_cmd(cmd_mask, attr);
-}
-
 inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, const RISC_V_Instruction_map::Command_attribute &attr)
 {
-    auto f = m_map.emplace(cmd_mask, attr.cmd);
+    auto f = map.emplace(cmd_mask, attr.cmd);
 
     return f.second == true;
 }
@@ -254,6 +243,7 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
         case 0b0000011:
         case 0b1100111:
         case 0b1110011:
+        case 0b0001111:
             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
             *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
         break;
@@ -276,11 +266,6 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
                 *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
             else // SLLIW, SRLIW, SRAIW ... bit 30 is needed for distinguishing between SR and SL  
                *mask_dst = instruction & RISC_V_Instr_t(0b0100000'00000'00000'111'00000'1111111);
-        break;
-
-        case 0b0001111:
-             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
-             *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
         break;
 
         case 0b0100011:
@@ -334,9 +319,6 @@ void RISC_V_Emulator::start()
     {    
         bus.Fetch_instruction(reg_file, &instruction);
         
-        if (m_CPU_archietecture.endian != nUtil::gHOST_ENDIAN)
-            nUtil::Swap_endian(instruction);
-
         nRISC_V_cpu_spec::RISC_V_Addr_t next_pc{};
 
         /* the lowest 2 bits of a compressed instruction is not 0b11*/
@@ -351,9 +333,9 @@ void RISC_V_Emulator::start()
 
             CHECK_ERROR(opcode_type_status == true);
 
-            auto it_instr_cmd = m_instruction_map->m_map.find(masked_instruction);
+            auto it_instr_cmd = m_instruction_map->map.find(masked_instruction);
 
-            CHECK_ERROR(it_instr_cmd != m_instruction_map->m_map.end());
+            CHECK_ERROR(it_instr_cmd != m_instruction_map->map.end());
 
             cmd = it_instr_cmd->second;
             
@@ -375,8 +357,8 @@ void RISC_V_Emulator::start()
         // x0 is hard wired 0
         reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x0] = 0;
 
-        assert(instr_pkg.next_pc >= m_CPU_archietecture.base_addr);
-        assert(instr_pkg.next_pc + sizeof(nRISC_V_cpu_spec::RISC_V_Instr_t) <= m_CPU_archietecture.highest_addr);
+        CHECK_ERROR(instr_pkg.next_pc >= m_CPU_archietecture.base_addr);
+        CHECK_ERROR(instr_pkg.next_pc + sizeof(nRISC_V_cpu_spec::RISC_V_Instr_t) <= m_CPU_archietecture.highest_addr);
         reg_file.pc = instr_pkg.next_pc;
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::finish)

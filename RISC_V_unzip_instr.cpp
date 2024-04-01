@@ -704,7 +704,7 @@ static bool unzip_101(RISC_V_Instr_t instruction,
     {
         case 0b00:
         {
-            Decompose_CL(instruction, cmprs_component);
+            Decompose_CS(instruction, cmprs_component);
             component.rs1 = cmprs_component.rs1 + RV_reg_file::x8;
             component.rs2 = cmprs_component.rs2 + RV_reg_file::x8;
             
