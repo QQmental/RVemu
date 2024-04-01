@@ -1,6 +1,13 @@
 make = make
 cc = g++
-CPP_FLAG = -std=c++17 -g -pedantic -Wparentheses -fsanitize=undefined -DXLEN=64 -Werror -MMD -Wall
+CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall
+
+dbg = off
+ifeq ($(dbg), on)
+	CPP_FLAG += -g -fsanitize=undefined
+else
+	CPP_FLAG += -O2 -DNDEBUG
+endif
 
 SRCS = BUS.cpp main.cpp RISC_V_cmd.cpp RISC_V_emu.cpp RISC_V_load_guest.cpp \
 RISC_V_unzip_instr.cpp Syscall.cpp
@@ -20,6 +27,7 @@ endif
 .PHONY: clean all add_test_src
 
 all:$(OBJS) $(BIN)
+	make add_test_src
 
 $(BIN) : $(OBJS)
 	$(cc) $(OBJS) $(CPP_FLAG)  -o $@

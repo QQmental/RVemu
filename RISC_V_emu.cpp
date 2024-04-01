@@ -185,14 +185,14 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
 
 RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
 {
-    uint8_t *sh_RISC_V_attr {};
+    std::unique_ptr<uint8_t[]> sh_RISC_V_attr {};
     
     m_CPU_archietecture = {};
 
     m_mem = std::unique_ptr<char[]>(new char[gDEFAULT_USER_HIGHESET_ADDR]);
 
     nRISC_V_load_guest::Init_guest_segment_mapping(program_name, m_program_mdata, m_mem.get(), sh_RISC_V_attr);
-    nRISC_V_load_guest::Init_guest_RISC_V_attributes(m_CPU_archietecture.RISC_V_attributes, sh_RISC_V_attr);
+    nRISC_V_load_guest::Init_guest_RISC_V_attributes(m_CPU_archietecture.RISC_V_attributes, sh_RISC_V_attr.get());
     
     if (m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_stack_align.first == true)
         m_program_mdata.stack_pointer_alignment = m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_stack_align.second;
@@ -217,8 +217,6 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
     Regist_RVI_cmd(*m_instruction_map.get());
     
     m_program_mdata.CPU_attributes = &m_CPU_archietecture;
-    
-    delete[] sh_RISC_V_attr;
 }
 
 RISC_V_Emulator::~RISC_V_Emulator()

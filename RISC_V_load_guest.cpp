@@ -14,7 +14,7 @@
 
 bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr);
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
 void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
 
@@ -73,9 +73,8 @@ static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, El
     return true;
 }
 
-// highest_addr is set to be the highest addr among those loaded segment
-// a piece of memory is allocated for 'sh_RISC_V_attr' when a segment of type 'PT_RISC_V_ATTRIBUTES' exists.
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, uint8_t *&sh_RISC_V_attr)
+
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
 {
     Elf64_Ehdr hdr;
 
@@ -122,9 +121,9 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Pr
         {
             f = std::fseek(file_stream, phdr.p_offset, SEEK_SET);
 
-            sh_RISC_V_attr = new uint8_t[phdr.p_filesz];
+            sh_RISC_V_attr = std::make_unique<uint8_t[]>(phdr.p_filesz);
 
-            auto sz = std::fread(reinterpret_cast<void*>(sh_RISC_V_attr), phdr.p_filesz, 1, file_stream);
+            auto sz = std::fread(reinterpret_cast<void*>(sh_RISC_V_attr.get()), phdr.p_filesz, 1, file_stream);
 
             assert(sz != 0);
         }
