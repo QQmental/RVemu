@@ -37,42 +37,42 @@ public:
     can be compatible with the compressed command
 */
 
-    virtual nRISC_V_cmd::instr_cmd_t C_LWSP() {return nRISC_V_cmd::LW;}
-    virtual nRISC_V_cmd::instr_cmd_t C_LDSP() {return nRISC_V_cmd::LD;}
-    virtual nRISC_V_cmd::instr_cmd_t C_LQSP() {nUtil::FATAL("C.LQSP is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FLWSP() {nUtil::FATAL("C.FLWSP is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FLDSP() {nUtil::FATAL("C.FLDSP is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_LWSP() {return nRISC_V_cmd::LW;}
+    nRISC_V_cmd::instr_cmd_t C_LDSP() {return nRISC_V_cmd::LD;}
+    nRISC_V_cmd::instr_cmd_t C_LQSP() {nUtil::FATAL("C.LQSP is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FLWSP() {nUtil::FATAL("C.FLWSP is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FLDSP() {nUtil::FATAL("C.FLDSP is not implemented\n"); return nullptr;}
     
-    virtual nRISC_V_cmd::instr_cmd_t C_SWSP() {return nRISC_V_cmd::SW;}
-    virtual nRISC_V_cmd::instr_cmd_t C_SDSP() {return nRISC_V_cmd::SD;}
-    virtual nRISC_V_cmd::instr_cmd_t C_SQSP() {nUtil::FATAL("C.SQSP is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FSWSP() {nUtil::FATAL("C.FSWSP is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FSDSP() {nUtil::FATAL("C.FSDSP is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_SWSP() {return nRISC_V_cmd::SW;}
+    nRISC_V_cmd::instr_cmd_t C_SDSP() {return nRISC_V_cmd::SD;}
+    nRISC_V_cmd::instr_cmd_t C_SQSP() {nUtil::FATAL("C.SQSP is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FSWSP() {nUtil::FATAL("C.FSWSP is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FSDSP() {nUtil::FATAL("C.FSDSP is not implemented\n"); return nullptr;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_LW() {return nRISC_V_cmd::LW;}
-    virtual nRISC_V_cmd::instr_cmd_t C_LD() {return nRISC_V_cmd::LD;}
-    virtual nRISC_V_cmd::instr_cmd_t C_LQ() {nUtil::FATAL("C.LQ is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FLW() {nUtil::FATAL("C.FLW is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FLD() {nUtil::FATAL("C.FLD is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_LW() {return nRISC_V_cmd::LW;}
+    nRISC_V_cmd::instr_cmd_t C_LD() {return nRISC_V_cmd::LD;}
+    nRISC_V_cmd::instr_cmd_t C_LQ() {nUtil::FATAL("C.LQ is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FLW() {nUtil::FATAL("C.FLW is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FLD() {nUtil::FATAL("C.FLD is not implemented\n"); return nullptr;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_SW() {return nRISC_V_cmd::SW;}
-    virtual nRISC_V_cmd::instr_cmd_t C_SD() {return nRISC_V_cmd::SD;}
-    virtual nRISC_V_cmd::instr_cmd_t C_SQ() {nUtil::FATAL("C.SQ is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FSW() {nUtil::FATAL("C.FSW is not implemented\n"); return nullptr;}
-    virtual nRISC_V_cmd::instr_cmd_t C_FSD() {nUtil::FATAL("C.FSD is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_SW() {return nRISC_V_cmd::SW;}
+    nRISC_V_cmd::instr_cmd_t C_SD() {return nRISC_V_cmd::SD;}
+    nRISC_V_cmd::instr_cmd_t C_SQ() {nUtil::FATAL("C.SQ is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FSW() {nUtil::FATAL("C.FSW is not implemented\n"); return nullptr;}
+    nRISC_V_cmd::instr_cmd_t C_FSD() {nUtil::FATAL("C.FSD is not implemented\n"); return nullptr;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_J() {return nRISC_V_cmd::JAL;}
-    virtual nRISC_V_cmd::instr_cmd_t C_JAL() {return nRISC_V_cmd::C_JAL;}
-    virtual nRISC_V_cmd::instr_cmd_t C_JR() {return nRISC_V_cmd::JALR;}
-    virtual nRISC_V_cmd::instr_cmd_t C_JALR() {return nRISC_V_cmd::C_JALR;} 
+    nRISC_V_cmd::instr_cmd_t C_J() {return nRISC_V_cmd::JAL;}
+    nRISC_V_cmd::instr_cmd_t C_JAL() {return nRISC_V_cmd::C_JAL;}
+    nRISC_V_cmd::instr_cmd_t C_JR() {return nRISC_V_cmd::JALR;}
+    nRISC_V_cmd::instr_cmd_t C_JALR() {return nRISC_V_cmd::C_JALR;} 
 
     // compared with zero only
-    virtual nRISC_V_cmd::instr_cmd_t C_BEQZ() {return nRISC_V_cmd::BEQ;}
+    nRISC_V_cmd::instr_cmd_t C_BEQZ() {return nRISC_V_cmd::BEQ;}
     // compared with zero only
-    virtual nRISC_V_cmd::instr_cmd_t C_BNEZ() {return nRISC_V_cmd::BNE;}
+    nRISC_V_cmd::instr_cmd_t C_BNEZ() {return nRISC_V_cmd::BNE;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_LI() {return nRISC_V_cmd::ADDI;}
-    virtual nRISC_V_cmd::instr_cmd_t C_LUI() 
+    nRISC_V_cmd::instr_cmd_t C_LI() {return nRISC_V_cmd::ADDI;}
+    nRISC_V_cmd::instr_cmd_t C_LUI() 
     {
         if constexpr(nRISC_V_cmd::gXLEN == 32 || nRISC_V_cmd::gXLEN == 64)
             return nRISC_V_cmd::LUI;
@@ -83,12 +83,12 @@ public:
         }
     }  
 
-    virtual nRISC_V_cmd::instr_cmd_t C_ADDI() {return nRISC_V_cmd::ADDI;} 
-    virtual nRISC_V_cmd::instr_cmd_t C_ADDIW() {return nRISC_V_cmd::ADDIW;}
-    virtual nRISC_V_cmd::instr_cmd_t C_ADDI_16SP() {return nRISC_V_cmd::ADDI;}
-    virtual nRISC_V_cmd::instr_cmd_t C_ADDI_4SPN() {return nRISC_V_cmd::ADDI;} 
+    nRISC_V_cmd::instr_cmd_t C_ADDI() {return nRISC_V_cmd::ADDI;} 
+    nRISC_V_cmd::instr_cmd_t C_ADDIW() {return nRISC_V_cmd::ADDIW;}
+    nRISC_V_cmd::instr_cmd_t C_ADDI_16SP() {return nRISC_V_cmd::ADDI;}
+    nRISC_V_cmd::instr_cmd_t C_ADDI_4SPN() {return nRISC_V_cmd::ADDI;} 
 
-    virtual nRISC_V_cmd::instr_cmd_t C_SLLI()
+    nRISC_V_cmd::instr_cmd_t C_SLLI()
     {
         if constexpr(nRISC_V_cmd::gXLEN == 32 || nRISC_V_cmd::gXLEN == 64)
             return nRISC_V_cmd::SLLI;
@@ -99,7 +99,7 @@ public:
         }
     }
 
-    virtual nRISC_V_cmd::instr_cmd_t C_SRLI()
+    nRISC_V_cmd::instr_cmd_t C_SRLI()
     {
         if constexpr(nRISC_V_cmd::gXLEN == 32 || nRISC_V_cmd::gXLEN == 64)
             return nRISC_V_cmd::SRLI;
@@ -110,7 +110,7 @@ public:
         }
     }
 
-    virtual nRISC_V_cmd::instr_cmd_t C_SRAI()
+    nRISC_V_cmd::instr_cmd_t C_SRAI()
     {
         if constexpr(nRISC_V_cmd::gXLEN == 32 || nRISC_V_cmd::gXLEN == 64)
             return nRISC_V_cmd::SRAI;
@@ -121,23 +121,23 @@ public:
         }
     }
 
-    virtual nRISC_V_cmd::instr_cmd_t C_ANDI() {return nRISC_V_cmd::ANDI;}     
+    nRISC_V_cmd::instr_cmd_t C_ANDI() {return nRISC_V_cmd::ANDI;}     
 
-    virtual nRISC_V_cmd::instr_cmd_t C_MV() {return nRISC_V_cmd::ADD;}     
-    virtual nRISC_V_cmd::instr_cmd_t C_ADD() {return nRISC_V_cmd::ADD;}
+    nRISC_V_cmd::instr_cmd_t C_MV() {return nRISC_V_cmd::ADD;}     
+    nRISC_V_cmd::instr_cmd_t C_ADD() {return nRISC_V_cmd::ADD;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_AND() {return nRISC_V_cmd::AND;}
-    virtual nRISC_V_cmd::instr_cmd_t C_OR() {return nRISC_V_cmd::OR;}
-    virtual nRISC_V_cmd::instr_cmd_t C_XOR() {return nRISC_V_cmd::XOR;}
-    virtual nRISC_V_cmd::instr_cmd_t C_SUB() {return nRISC_V_cmd::SUB;}
-    virtual nRISC_V_cmd::instr_cmd_t C_ADDW() 
+    nRISC_V_cmd::instr_cmd_t C_AND() {return nRISC_V_cmd::AND;}
+    nRISC_V_cmd::instr_cmd_t C_OR() {return nRISC_V_cmd::OR;}
+    nRISC_V_cmd::instr_cmd_t C_XOR() {return nRISC_V_cmd::XOR;}
+    nRISC_V_cmd::instr_cmd_t C_SUB() {return nRISC_V_cmd::SUB;}
+    nRISC_V_cmd::instr_cmd_t C_ADDW() 
     {
         if constexpr(nRISC_V_cmd::gXLEN != 64 && nRISC_V_cmd::gXLEN != 128)
             nUtil::FATAL("no suitable implementation for ADDW\n");
         else
             return nRISC_V_cmd::ADDW;
     }
-    virtual nRISC_V_cmd::instr_cmd_t C_SUBW()
+    nRISC_V_cmd::instr_cmd_t C_SUBW()
     {
         if constexpr(nRISC_V_cmd::gXLEN != 64 && nRISC_V_cmd::gXLEN != 128)
             nUtil::FATAL("no suitable implementation for SUBW\n");
@@ -145,13 +145,13 @@ public:
             return nRISC_V_cmd::SUBW;
     }    
     
-    virtual nRISC_V_cmd::instr_cmd_t C_Illegal_instruction() {return nRISC_V_cmd::Illegal_CMD;}
+    nRISC_V_cmd::instr_cmd_t C_Illegal_instruction() {return nRISC_V_cmd::Illegal_CMD;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_NOP() {return nRISC_V_cmd::NOP;}
+    nRISC_V_cmd::instr_cmd_t C_NOP() {return nRISC_V_cmd::NOP;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_EBREAK() {return nRISC_V_cmd::EBREAK;}
+    nRISC_V_cmd::instr_cmd_t C_EBREAK() {return nRISC_V_cmd::EBREAK;}
 
-    virtual nRISC_V_cmd::instr_cmd_t C_HINT() {return nRISC_V_cmd::HINT;}
+    nRISC_V_cmd::instr_cmd_t C_HINT() {return nRISC_V_cmd::HINT;}
 };
 
 

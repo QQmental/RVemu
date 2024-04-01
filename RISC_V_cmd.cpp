@@ -94,7 +94,14 @@ void nRISC_V_cmd::MULH(Instruction_package &instr_pkg);
 void nRISC_V_cmd::MULHSU(Instruction_package &instr_pkg);
 void nRISC_V_cmd::MULHU(Instruction_package &instr_pkg);
 void nRISC_V_cmd::MULW(Instruction_package &instr_pkg);
-
+void nRISC_V_cmd::DIV(Instruction_package &instr_pkg);
+void nRISC_V_cmd::DIVU(Instruction_package &instr_pkg);
+void nRISC_V_cmd::REM(Instruction_package &instr_pkg);
+void nRISC_V_cmd::REMU(Instruction_package &instr_pkg);
+void nRISC_V_cmd::DIVW(Instruction_package &instr_pkg);
+void nRISC_V_cmd::DIVUW(Instruction_package &instr_pkg);
+void nRISC_V_cmd::REMW(Instruction_package &instr_pkg);
+void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg);
 
 template <typename ret_Int_t, unsigned B>
 ret_Int_t Signed_extend(RISC_V_double_word_t num)
@@ -958,4 +965,123 @@ void nRISC_V_cmd::MULW(Instruction_package &instr_pkg)
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
     rd_val = Signed_extend<Int_t, 32>(rs1_val*rs2_val);
+}
+
+
+void nRISC_V_cmd::DIV(Instruction_package &instr_pkg)
+{
+    Int_t rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    Int_t rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2];
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = -1;
+    else if (rs1_val == std::numeric_limits<Int_t>::min() && rs2_val == -1)
+        rd_val = std::numeric_limits<Int_t>::min();
+    else
+        rd_val = rs1_val/rs2_val;
+}
+void nRISC_V_cmd::DIVU(Instruction_package &instr_pkg)
+{
+    auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2];
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = std::numeric_limits<Uint_t>::max();
+    else
+        rd_val = rs1_val/rs2_val;
+}
+
+void nRISC_V_cmd::REM(Instruction_package &instr_pkg)
+{
+    Int_t rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    Int_t rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2];
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = rs1_val;
+    else if(rs2_val == -1)
+        rd_val = 0;
+    else
+        rd_val = rs1_val%rs2_val;
+}
+void nRISC_V_cmd::REMU(Instruction_package &instr_pkg)
+{
+    auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2];
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = rs1_val;
+    else
+        rd_val = rs1_val%rs2_val;
+}
+void nRISC_V_cmd::DIVW(Instruction_package &instr_pkg)
+{
+    Int_t rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+
+    Int_t rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = -1;
+    else if (rs1_val == std::numeric_limits<int32_t>::min() && rs2_val == -1)
+        rd_val = std::numeric_limits<int32_t>::min();
+    else
+        rd_val = Signed_extend<Int_t, 32>(rs1_val/rs2_val);
+}
+void nRISC_V_cmd::DIVUW(Instruction_package &instr_pkg)
+{
+    auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = std::numeric_limits<Uint_t>::max();
+    else
+        rd_val = Signed_extend<Int_t, 32>(rs1_val/rs2_val);
+}
+void nRISC_V_cmd::REMW(Instruction_package &instr_pkg)
+{
+    Int_t rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+
+    Int_t rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = rs1_val;
+    else if(rs2_val == -1)
+        rd_val = 0;
+    else
+        rd_val = rs1_val%rs2_val;
+
+    rd_val = Signed_extend<Int_t, 32>(rd_val);
+}
+void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg)
+{
+    auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+
+    auto rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+
+    if (rs2_val == 0)
+        rd_val = rs1_val;
+    else
+        rd_val = rs1_val%rs2_val;
+        
+    rd_val = Signed_extend<Int_t, 32>(rd_val);
 }

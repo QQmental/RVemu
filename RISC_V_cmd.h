@@ -160,6 +160,15 @@ void MULH(Instruction_package &instr_pkg);
 void MULHSU(Instruction_package &instr_pkg);
 void MULHU(Instruction_package &instr_pkg);
 void MULW(Instruction_package &instr_pkg);
+void DIV(Instruction_package &instr_pkg);
+void DIVU(Instruction_package &instr_pkg);
+void REM(Instruction_package &instr_pkg);
+void REMU(Instruction_package &instr_pkg);
+void DIVW(Instruction_package &instr_pkg);
+void DIVUW(Instruction_package &instr_pkg);
+void REMW(Instruction_package &instr_pkg);
+void REMUW(Instruction_package &instr_pkg);
+
 
 void Illegal_CMD(Instruction_package &instr_pkg);
 void NOP(Instruction_package &instr_pkg);
