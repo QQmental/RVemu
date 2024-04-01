@@ -112,6 +112,11 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
         CHECK_ERROR(regist_success == true);\
     }while(0);
 
+    /*
+    some I type functions are duplicated to reduce branches.
+    I format is not consistent, leading to number of branch increases.
+    */
+
     REGIST_CMD(0b00000000000000000000'00000'0110111, LUI,   U);
     REGIST_CMD(0b00000000000000000000'00000'0010111, AUIPC, U);
 
@@ -122,13 +127,21 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     REGIST_CMD(0b000000000000'00000'001'00000'0000011, LH,    I);
     REGIST_CMD(0b000000000000'00000'010'00000'0000011, LW,    I);
     REGIST_CMD(0b000000000000'00000'100'00000'0000011, LBU,   I);
-    REGIST_CMD(0b000000000000'00000'101'00000'0000011, LHU,   I);                
+    REGIST_CMD(0b000000000000'00000'101'00000'0000011, LHU,   I);
+
     REGIST_CMD(0b000000000000'00000'000'00000'0010011, ADDI,  I); 
     REGIST_CMD(0b000000000000'00000'010'00000'0010011, SLTI,  I);
     REGIST_CMD(0b000000000000'00000'011'00000'0010011, SLTIU, I);
     REGIST_CMD(0b000000000000'00000'100'00000'0010011, XORI,  I);
     REGIST_CMD(0b000000000000'00000'110'00000'0010011, ORI,   I);
     REGIST_CMD(0b000000000000'00000'111'00000'0010011, ANDI,  I);
+
+    REGIST_CMD(0b010000000000'00000'000'00000'0010011, ADDI,  I); 
+    REGIST_CMD(0b010000000000'00000'010'00000'0010011, SLTI,  I);
+    REGIST_CMD(0b010000000000'00000'011'00000'0010011, SLTIU, I);
+    REGIST_CMD(0b010000000000'00000'100'00000'0010011, XORI,  I);
+    REGIST_CMD(0b010000000000'00000'110'00000'0010011, ORI,   I);
+    REGIST_CMD(0b010000000000'00000'111'00000'0010011, ANDI,  I);
 
     //RV64 SLLI, SRLI, SRAI share same format with those in RV32
     REGIST_CMD(0b000000000000'00000'001'00000'0010011, SLLI,  I);
@@ -142,7 +155,10 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     //RV64I
     REGIST_CMD(0b000000000000'00000'110'00000'0000011, LWU,   I);
     REGIST_CMD(0b000000000000'00000'011'00000'0000011, LD,    I);
-    REGIST_CMD(0b000000000000'00000'000'00000'0011011, ADDIW, I);  
+
+    REGIST_CMD(0b000000000000'00000'000'00000'0011011, ADDIW, I);
+    REGIST_CMD(0b010000000000'00000'000'00000'0011011, ADDIW, I); 
+    
     REGIST_CMD(0b000000000000'00000'001'00000'0011011, SLLIW, I);
     REGIST_CMD(0b000000000000'00000'101'00000'0011011, SRLIW, I);
     REGIST_CMD(0b010000000000'00000'101'00000'0011011, SRAIW, I);
@@ -267,19 +283,19 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
 
             // SLLI, SRLI, SRAI ... bit 30 is needed for distinguishing between SR and SL
-            if (nRISC_V_decompose::funct3(instruction) == 0b001 || nRISC_V_decompose::funct3(instruction) == 0b101)
+            //if (nRISC_V_decompose::funct3(instruction) == 0b001 || nRISC_V_decompose::funct3(instruction) == 0b101)
                *mask_dst = instruction & RISC_V_Instr_t(0b0100000'00000'00000'111'00000'1111111);
             // ADDI, SLTI ...
-            else
-               *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);                
+            //else
+            //   *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);                
         break;
 
         case 0b0011011:
             nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);    
 
-            if (nRISC_V_decompose::funct3(instruction) == 0b000)
-                *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
-            else // SLLIW, SRLIW, SRAIW ... bit 30 is needed for distinguishing between SR and SL  
+            //if (nRISC_V_decompose::funct3(instruction) == 0b000)
+            //    *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
+            //else // SLLIW, SRLIW, SRAIW ... bit 30 is needed for distinguishing between SR and SL  
                *mask_dst = instruction & RISC_V_Instr_t(0b0100000'00000'00000'111'00000'1111111);
         break;
 
