@@ -1,7 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include "../util.h"
-
+#include "../RISC_V_decompose.h"
 
 uint64_t func(uint16_t num) 
 {
@@ -31,4 +31,11 @@ int main()
     int64_t sw = 0xABCD0123456789AB;
     nUtil::Swap_endian(sw);
     assert(sw == 0xAB8967452301CDAB);
+
+
+    nRISC_V_cpu_spec::RV_Instr_component result;
+    nRISC_V_cpu_spec::RISC_V_Instr_t instr = 0x1234;
+    nRISC_V_decompose::Decompose_Jtype_instruction(result, instr);
+
+    return result.funct3;
 }

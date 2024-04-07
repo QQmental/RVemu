@@ -17,7 +17,11 @@ public:
     void SH(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V_Addr_t addr);
     void SW(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V_Addr_t addr);
     void SD(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V_Addr_t addr);
-    void* Get_raw_ptr(nRISC_V_cpu_spec::RISC_V_Addr_t addr) {return &m_mem.get()[addr - m_CPU_archietecture.base_addr];}
+    void* Get_raw_ptr(nRISC_V_cpu_spec::RISC_V_Addr_t addr) 
+    {
+        CHECK_ERROR(Verify_addr(addr, 1) == true);
+        return &m_mem.get()[addr - m_CPU_archietecture.base_addr];
+    }
     void Fetch_instruction(const nRISC_V_cpu_spec::RV64_Regster_file &reg_file, nRISC_V_cpu_spec::RISC_V_Instr_t *dst);
     nUtil::eEndian endian() const { return m_CPU_archietecture.endian; }
 

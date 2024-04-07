@@ -7,7 +7,7 @@ using namespace nRISC_V_cpu_spec;
 static RISC_V_Instr_t 
 Extract_portion_of_instruction(const RISC_V_Instr_t &targ, uint32_t upper_bit_pos, uint32_t lower_bit_pos);
 
-static auto const EPOI = Extract_portion_of_instruction;
+#define EPOI Extract_portion_of_instruction
 
 struct Compressed_instr_component
 {

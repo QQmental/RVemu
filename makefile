@@ -4,7 +4,7 @@ CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall
 
 dbg = off
 ifeq ($(dbg), on)
-	CPP_FLAG += -g -fsanitize=undefined
+	CPP_FLAG += -g
 else
 	CPP_FLAG += -O2 -DNDEBUG
 endif

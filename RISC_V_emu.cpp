@@ -19,7 +19,6 @@ using nRISC_V_cpu_spec::RV_Instr_component;
 
 constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0x0000'0000'0200'0000;
 
-// reserve 4k bytes between START_STACK_POINTER and USER_HIGHESET_ADDR
 constexpr nRISC_V_cpu_spec::RISC_V_double_word_t
 gDEFAULT_USER_HIGHESET_ADDR = gDEFAULT_START_STACK_POINTER + (1<<12);
 
@@ -98,6 +97,8 @@ static void Init_basic_CPU_attributes(std::string program_name, const Program_md
 
 static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
 {
+    map.map.reserve(1024);
+    map.map.max_load_factor(0.25);
     RISC_V_Instruction_map::Command_attribute attr;
 
     bool regist_success {};
@@ -113,8 +114,8 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     }while(0);
 
     /*
-    some I type functions are duplicated to reduce branches.
-    I format is not consistent, leading to number of branch increases.
+        some I type functions are duplicated to reduce branches.
+        I format is not consistent, leading to number of branch increases.
     */
 
     REGIST_CMD(0b00000000000000000000'00000'0110111, LUI,   U);
@@ -280,23 +281,9 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
         break;
 
         case 0b0010011:
-            nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
-
-            // SLLI, SRLI, SRAI ... bit 30 is needed for distinguishing between SR and SL
-            //if (nRISC_V_decompose::funct3(instruction) == 0b001 || nRISC_V_decompose::funct3(instruction) == 0b101)
-               *mask_dst = instruction & RISC_V_Instr_t(0b0100000'00000'00000'111'00000'1111111);
-            // ADDI, SLTI ...
-            //else
-            //   *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);                
-        break;
-
         case 0b0011011:
-            nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);    
-
-            //if (nRISC_V_decompose::funct3(instruction) == 0b000)
-            //    *mask_dst = instruction & RISC_V_Instr_t(0b000000000000'00000'111'00000'1111111);
-            //else // SLLIW, SRLIW, SRAIW ... bit 30 is needed for distinguishing between SR and SL  
-               *mask_dst = instruction & RISC_V_Instr_t(0b0100000'00000'00000'111'00000'1111111);
+            nRISC_V_decompose::Decompose_Itype_instruction(component, instruction);
+            *mask_dst = instruction & RISC_V_Instr_t(0b0100000'00000'00000'111'00000'1111111);           
         break;
 
         case 0b0100011:
