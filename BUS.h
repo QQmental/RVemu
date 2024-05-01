@@ -40,7 +40,8 @@ inline void BUS::Load_data(void *dst, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std:
 
 inline void BUS::Store_data(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size)
 {
-    if (m_CPU_archietecture.endian != nUtil::gHOST_ENDIAN)
+    // store low bits to rd reg
+    if (nUtil::gHOST_ENDIAN != nUtil::eEndian::little_endian)
         nUtil::Swap_endian(src);
             
     memcpy(Get_raw_ptr(addr), &src, size);
@@ -77,9 +78,13 @@ inline void BUS::SD(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V
 inline void BUS::Fetch_instruction(const nRISC_V_cpu_spec::RV64_Regster_file &reg_file, nRISC_V_cpu_spec::RISC_V_Instr_t *dst)
 {
     CHECK_ERROR(Verify_addr(reg_file.pc, sizeof(*dst)) == true);
+
+    // TODO: if no c extension support, it should be multiple of 4 only
+    CHECK_ERROR(reg_file.pc % 4 == 0 || reg_file.pc % 2 == 0);
+
     memcpy(dst, Get_raw_ptr(reg_file.pc), sizeof(*dst));
 
-    if (m_CPU_archietecture.endian != nUtil::gHOST_ENDIAN)
+    if (nUtil::gHOST_ENDIAN  != nUtil::little_endian)
         nUtil::Swap_endian(*dst);
 }
 

@@ -300,7 +300,7 @@ static bool unzip_001(RISC_V_Instr_t instruction,
                 *cmd = cmd_map.C_JAL();
                 component.rd = RV_reg_file::x1;
                 component.imm = Parse_J_imm(instruction);
-
+                component.imm = Signed_extend<int32_t, 12>(component.imm);
            }
            else
            {

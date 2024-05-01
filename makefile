@@ -1,13 +1,23 @@
 make = make
 cc = g++
 CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall
+LINK =
 
+# debug flag or not
 dbg = off
 ifeq ($(dbg), on)
-	CPP_FLAG += -g
+	CPP_FLAG += -g -fsanitize=undefined
 else
 	CPP_FLAG += -O2 -DNDEBUG
 endif
+
+# add coverage record or not
+cov = off
+ifeq ($(cov), on)
+	CPP_FLAG += -fprofile-arcs -ftest-coverage
+	LINK += -lgcov
+endif
+
 
 SRCS = BUS.cpp main.cpp RISC_V_cmd.cpp RISC_V_emu.cpp RISC_V_load_guest.cpp \
 RISC_V_unzip_instr.cpp Syscall.cpp
@@ -24,13 +34,14 @@ ifeq ($(make), mingw32-make)
 	RM = DEL
 endif
 
-.PHONY: clean all add_test_src
+.PHONY: clean all add_test_src gen_cov_record
 
 all:$(OBJS) $(BIN)
 	make add_test_src
 
 $(BIN) : $(OBJS)
-	$(cc) $(OBJS) $(CPP_FLAG)  -o $@
+	$(cc) $(OBJS) $(CPP_FLAG) $(LINK) -o $@
+
 
 BUS.o :BUS.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@
@@ -58,7 +69,12 @@ Syscall.o :Syscall.cpp
 clean:
 	$(foreach dep, $(DEPS), $(RM) $(dep);)
 	$(foreach obj, $(OBJS), $(RM) $(obj);)
-	$(RM) $(wildcard ./*.exe)
+	$(RM) $(wildcard ./*.exe) *.gcno *.gcda
+	rm -rf result
 
 add_test_src:
 	make -C ./test
+
+gen_cov_record:
+	lcov -c -d . -o test.info --rc lcov_branch_coverage=1
+	genhtml --branch-coverage -o result test.info

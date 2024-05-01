@@ -27,7 +27,10 @@ static uint64_t sys_unimplemented(nRISC_V_cmd::Exec_component &exec_compnent, Pr
 static uint64_t sys_exit(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
 {
     auto code = GET(a0);
-    
+    if (code == 1)
+    {
+        printf("abort() !\n");
+    }
     exit(code);
 }
 
@@ -47,7 +50,7 @@ static uint64_t sys_write(nRISC_V_cmd::Exec_component &exec_compnent, Program_md
     auto len = GET(a2);
     
     auto host_ptr = exec_compnent.bus.Get_raw_ptr(ptr);
-    
+
     return write(fd, host_ptr, (size_t)len);
 }
 
@@ -55,18 +58,18 @@ static uint64_t sys_fstat(nRISC_V_cmd::Exec_component &exec_compnent, Program_md
 {
     auto fd = GET(a0); 
     auto addr = GET(a1);
-    return fstat(fd, new(exec_compnent.bus.Get_raw_ptr(addr))struct stat);
+    return fstat(fd, reinterpret_cast<struct stat*>(exec_compnent.bus.Get_raw_ptr(addr)));
 }
 
 static uint64_t sys_gettimeofday(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
 {
     auto tv_addr = GET(a0); 
     auto tz_addr = GET(a1);
-    auto *tv = new(exec_compnent.bus.Get_raw_ptr(tv_addr))struct timeval;
+    auto *tv = reinterpret_cast<struct timeval*>(exec_compnent.bus.Get_raw_ptr(tv_addr));
     struct timezone *tz = nullptr;
     
     if (tz_addr != 0) 
-        tz = new(exec_compnent.bus.Get_raw_ptr(tz_addr))struct timezone;
+        tz = reinterpret_cast<struct timezone*>(exec_compnent.bus.Get_raw_ptr(tz_addr));
         
     return gettimeofday(tv, tz);
 }
@@ -77,9 +80,9 @@ static uint64_t sys_brk(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdat
 
     if (addr == 0)
         addr = program_mdata.brk_addr;
-    assert(addr >= program_mdata.segment_base);
+    assert(addr >= program_mdata.brk_addr);
     assert(addr <= program_mdata.highest_addr);
-    printf("addr: %lu \n",addr);
+    printf("incur addr: %lu \n",addr-program_mdata.brk_addr);
     program_mdata.brk_addr = addr;
 
     return addr;

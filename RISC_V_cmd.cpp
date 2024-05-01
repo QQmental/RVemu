@@ -50,6 +50,7 @@ void nRISC_V_cmd::LHU(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SB(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SH(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SW(Instruction_package &instr_pkg);
+void nRISC_V_cmd::SD(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BEQ(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BNE(Instruction_package &instr_pkg);
 void nRISC_V_cmd::BLT(Instruction_package &instr_pkg);
@@ -254,7 +255,7 @@ void nRISC_V_cmd::SRAI(Instruction_package &instr_pkg)
     if (static_cast<Int_t>(rs1_val) < 0)
         original_sign_bit = nRISC_V_cpu_spec::RV_int_reg_t(-1);
 
-    rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt));
+    rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt - 1));
 }
 
 void nRISC_V_cmd::SLL(Instruction_package &instr_pkg)
@@ -304,8 +305,8 @@ void nRISC_V_cmd::SRA(Instruction_package &instr_pkg)
     
     if (static_cast<Int_t>(rs1_val) < 0)
         original_sign_bit = nRISC_V_cpu_spec::RV_int_reg_t(-1);
-
-    rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt));
+    
+    rd_val = (rs1_val >> shamt) | (original_sign_bit << (nRISC_V_cmd::gXLEN - shamt - 1));
 }
 
 
@@ -315,10 +316,9 @@ void nRISC_V_cmd::LUI(Instruction_package &instr_pkg)
 
     rd_val = instr_pkg.RV_instr_component.imm;
     
-    if constexpr(nRISC_V_cmd::gXLEN == 64)
-        rd_val = Signed_extend<Int_t, 32>(rd_val);
-    else if (nRISC_V_cmd::gXLEN != 32) // if neither 32 nor 64
-        nUtil::FATAL("no suitable implementation for LUI\n"); 
+    CHECK_ERROR(nRISC_V_cmd::gXLEN == 64);
+   
+    rd_val = Signed_extend<Int_t, 32>(rd_val);
 }
 
 void nRISC_V_cmd::AUIPC(Instruction_package &instr_pkg)
@@ -436,7 +436,7 @@ void nRISC_V_cmd::LW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    instr_pkg.bus.Load_data(reinterpret_cast<char*>(&rd_val), rs1_val + se_imm, 4);
+    instr_pkg.bus.Load_data(reinterpret_cast<char*>(&rd_val), static_cast<Int_t>(rs1_val) + se_imm, 4);
     
     if (instr_pkg.CPU_attribute.endian != nUtil::gHOST_ENDIAN)
         nUtil::Swap_endian(rd_val);
@@ -660,7 +660,7 @@ void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg)
         break;            
         default:
             printf("undifined imm in %s\n", __func__);
-            abort();
+            
         break;
     }
 
@@ -727,7 +727,7 @@ void nRISC_V_cmd::ADDIW(Instruction_package &instr_pkg)
 
     auto rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
 
-    int64_t lower32_rs1_val = rs1_val & (RISC_V_double_word_t(0xFF'FF'FF'FF));
+    int64_t lower32_rs1_val = Signed_extend<int64_t, 32>(rs1_val & (RISC_V_double_word_t(0xFF'FF'FF'FF)));
     
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
     
@@ -782,7 +782,7 @@ void nRISC_V_cmd::SRAIW(Instruction_package &instr_pkg)
     if (static_cast<Int_t>(rs1_val) < 0)
         original_sign_bit = -1;
 
-    auto val = (lower32_rs1_val >> shamt) | (original_sign_bit << (32 - shamt)); 
+    auto val = (lower32_rs1_val >> shamt) | (original_sign_bit << (32 - shamt - 1)); 
 
     rd_val = Signed_extend<int64_t, 32>(val) ;
 }
@@ -791,9 +791,9 @@ void nRISC_V_cmd::SRAIW(Instruction_package &instr_pkg)
 // sign-extended to 64-bits and written to the destination register.
 void nRISC_V_cmd::ADDW(Instruction_package &instr_pkg)
 {
-    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (RISC_V_double_word_t(0xFF'FF'FF'FF)); 
+    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & ((0xFF'FF'FF'FF)); 
 
-    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (RISC_V_double_word_t(0xFF'FF'FF'FF));
+    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & ((0xFF'FF'FF'FF));
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -802,9 +802,9 @@ void nRISC_V_cmd::ADDW(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::SLLW(Instruction_package &instr_pkg)
 {
-    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (RISC_V_double_word_t(0xFF'FF'FF'FF)); 
+    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & ((0xFF'FF'FF'FF)); 
 
-    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (RISC_V_double_word_t(0xFF'FF'FF'FF));
+    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & ((0xFF'FF'FF'FF));
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -813,9 +813,9 @@ void nRISC_V_cmd::SLLW(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::SRLW(Instruction_package &instr_pkg)
 {
-    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (RISC_V_double_word_t(0xFF'FF'FF'FF)); 
+    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (0xFF'FF'FF'FF); 
 
-    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (RISC_V_double_word_t(0xFF'FF'FF'FF));
+    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (0xFF'FF'FF'FF);
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -824,9 +824,9 @@ void nRISC_V_cmd::SRLW(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::SRAW(Instruction_package &instr_pkg)
 {
-    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (RISC_V_double_word_t(0xFF'FF'FF'FF)); 
+    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (0xFF'FF'FF'FF); 
 
-    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (RISC_V_double_word_t(0xFF'FF'FF'FF));
+    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (0xFF'FF'FF'FF);
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -837,9 +837,9 @@ void nRISC_V_cmd::SRAW(Instruction_package &instr_pkg)
 // sign-extended to 64-bits and written to the destination register.
 void nRISC_V_cmd::SUBW(Instruction_package &instr_pkg)
 {
-    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & (RISC_V_double_word_t(0xFF'FF'FF'FF)); 
+    uint32_t lower32_rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & ((0xFF'FF'FF'FF)); 
 
-    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & (RISC_V_double_word_t(0xFF'FF'FF'FF));
+    uint32_t lower32_rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & ((0xFF'FF'FF'FF));
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -921,7 +921,7 @@ void nRISC_V_cmd::MULH(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = product >> nRISC_V_cmd::gXLEN;
+    rd_val = product >> nRISC_V_cmd::gXLEN; 
 }
 
 void nRISC_V_cmd::MULHSU(Instruction_package &instr_pkg)
@@ -939,7 +939,7 @@ void nRISC_V_cmd::MULHSU(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = product >> nRISC_V_cmd::gXLEN;
+    rd_val = product >> nRISC_V_cmd::gXLEN; 
 }
 
 void nRISC_V_cmd::MULHU(Instruction_package &instr_pkg)
@@ -950,7 +950,7 @@ void nRISC_V_cmd::MULHU(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = (rs1_val*rs2_val) >> (nRISC_V_cmd::gXLEN);
+    rd_val = (rs1_val*rs2_val) >> (nRISC_V_cmd::gXLEN); 
 }
 
 void nRISC_V_cmd::MULW(Instruction_package &instr_pkg)
@@ -964,7 +964,7 @@ void nRISC_V_cmd::MULW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = Signed_extend<Int_t, 32>(rs1_val*rs2_val);
+    rd_val = Signed_extend<Int_t, 32>(rs1_val*rs2_val); 
 }
 
 
@@ -995,6 +995,7 @@ void nRISC_V_cmd::DIVU(Instruction_package &instr_pkg)
         rd_val = std::numeric_limits<Uint_t>::max();
     else
         rd_val = rs1_val/rs2_val;
+         
 }
 
 void nRISC_V_cmd::REM(Instruction_package &instr_pkg)
@@ -1024,6 +1025,7 @@ void nRISC_V_cmd::REMU(Instruction_package &instr_pkg)
         rd_val = rs1_val;
     else
         rd_val = rs1_val%rs2_val;
+         
 }
 void nRISC_V_cmd::DIVW(Instruction_package &instr_pkg)
 {
@@ -1039,6 +1041,8 @@ void nRISC_V_cmd::DIVW(Instruction_package &instr_pkg)
         rd_val = std::numeric_limits<int32_t>::min();
     else
         rd_val = Signed_extend<Int_t, 32>(rs1_val/rs2_val);
+
+         
 }
 void nRISC_V_cmd::DIVUW(Instruction_package &instr_pkg)
 {
@@ -1052,6 +1056,7 @@ void nRISC_V_cmd::DIVUW(Instruction_package &instr_pkg)
         rd_val = std::numeric_limits<Uint_t>::max();
     else
         rd_val = Signed_extend<Int_t, 32>(rs1_val/rs2_val);
+         
 }
 void nRISC_V_cmd::REMW(Instruction_package &instr_pkg)
 {
@@ -1069,6 +1074,7 @@ void nRISC_V_cmd::REMW(Instruction_package &instr_pkg)
         rd_val = rs1_val%rs2_val;
 
     rd_val = Signed_extend<Int_t, 32>(rd_val);
+     
 }
 void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg)
 {
@@ -1084,4 +1090,6 @@ void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg)
         rd_val = rs1_val%rs2_val;
         
     rd_val = Signed_extend<Int_t, 32>(rd_val);
+
+    
 }

@@ -17,7 +17,7 @@
 using nRISC_V_cpu_spec::RISC_V_Instr_t;
 using nRISC_V_cpu_spec::RV_Instr_component;
 
-constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0x0000'0000'0200'0000;
+constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0x0000'0000'0400'0000;
 
 constexpr nRISC_V_cpu_spec::RISC_V_double_word_t
 gDEFAULT_USER_HIGHESET_ADDR = gDEFAULT_START_STACK_POINTER + (1<<12);
@@ -217,13 +217,13 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     #undef REGIST_CMD
 }
 
-RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
+RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name, int argc, const char **argv)
 {
     std::unique_ptr<uint8_t[]> sh_RISC_V_attr {};
     
     m_CPU_archietecture = {};
 
-    m_mem = std::unique_ptr<char[]>(new char[gDEFAULT_USER_HIGHESET_ADDR]);
+    m_mem = std::unique_ptr<char[]>(new char[gDEFAULT_USER_HIGHESET_ADDR]{});
 
     nRISC_V_load_guest::Init_guest_segment_mapping(program_name, m_program_mdata, m_mem.get(), sh_RISC_V_attr);
     nRISC_V_load_guest::Init_guest_RISC_V_attributes(m_CPU_archietecture.RISC_V_attributes, sh_RISC_V_attr.get());
@@ -232,12 +232,6 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
         m_program_mdata.stack_pointer_alignment = m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_stack_align.second;
     else
         m_program_mdata.stack_pointer_alignment = 16;
-
-    printf("%s %u %u %u %u\n", m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_arch.second.c_str(), \
-    m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_stack_align.second,\
-    m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_unaligned_access.second, \
-    m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_atomic_abi.second, \
-    m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_x3_reg_usage.second);
     
     if (m_program_mdata.highest_addr > gDEFAULT_USER_HIGHESET_ADDR)
         nUtil::FATAL("user addr is not high enough in guest\n");
@@ -251,6 +245,9 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name)
     Regist_RVI_cmd(*m_instruction_map.get());
     
     m_program_mdata.CPU_attributes = &m_CPU_archietecture;
+
+    m_argc = argc;
+    m_argv = argv;
 }
 
 RISC_V_Emulator::~RISC_V_Emulator()
@@ -317,13 +314,33 @@ static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Ins
 
 void RISC_V_Emulator::start()
 {
+    BUS bus(std::move(m_mem), m_CPU_archietecture);
+    
     nRISC_V_cpu_spec::RV_reg_file reg_file = {};
     reg_file.pc = m_program_mdata.entry_point;
     reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] = gDEFAULT_START_STACK_POINTER;
 
+    // for main function argument
+    reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] -= 8; // auxp
+    reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] -= 8; // envp
+    
+
+    for(int i = 0 ; i < m_argc ; i++)
+    {
+        strcpy(reinterpret_cast<char*>(bus.Get_raw_ptr(m_program_mdata.brk_addr)), m_argv[m_argc - i - 1]); // copy a string from argv[]
+        reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] -= 8;                               // reserve space for a argv pointer
+        void *ptr_stack = bus.Get_raw_ptr(reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2]); // pointer to new stack top location
+        *reinterpret_cast<uint64_t*>(ptr_stack) = m_program_mdata.brk_addr;                     // record argv pointer
+        m_program_mdata.brk_addr += strlen(m_argv[m_argc - i - 1]) + 1;                         // update brk_addr because of the copied string
+    }
+
+    reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] -= 8; // argc
+    *reinterpret_cast<uint64_t*>(bus.Get_raw_ptr(reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2])) = m_argc;
+    
+
     nRISC_V_cpu_spec::RV_Instr_component RV_instr_component = {};
 
-    BUS bus(std::move(m_mem), m_CPU_archietecture);
+    
 
     nRISC_V_cpu_spec::RISC_V_Instr_t instruction, masked_instruction;
     
@@ -333,8 +350,10 @@ void RISC_V_Emulator::start()
     
     nRISC_V_cmd::instr_cmd_t cmd;
 
+    uint32_t cnt = 0;
     while(1)
     {    
+        cnt++;
         bus.Fetch_instruction(reg_file, &instruction);
         
         nRISC_V_cpu_spec::RISC_V_Addr_t next_pc{};
@@ -366,8 +385,6 @@ void RISC_V_Emulator::start()
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::ecall)
         {
-            std::cout << "pc 0x" << std::hex << reg_file.pc << "\n";
-
             auto val = nSyscall::Do_syscall(exec_component, m_program_mdata);
             reg_file.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::a0] = val;
         }
@@ -377,6 +394,7 @@ void RISC_V_Emulator::start()
 
         CHECK_ERROR(instr_pkg.next_pc >= m_CPU_archietecture.base_addr);
         CHECK_ERROR(instr_pkg.next_pc + sizeof(nRISC_V_cpu_spec::RISC_V_Instr_t) <= m_CPU_archietecture.highest_addr);
+        CHECK_ERROR(instr_pkg.regs.gp_regs[(uint32_t) nRISC_V_cpu_spec::gp_reg_abi_name::sp] % 16 == 0);
         reg_file.pc = instr_pkg.next_pc;
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::finish)
