@@ -16,25 +16,21 @@
 
 #define GET(reg_num) exec_compnent.regs.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name:: reg_num];
 
-using syscall_t = uint64_t(*)(nRISC_V_cmd::Exec_component &, Program_mdata_t &);
+using syscall_t = uint64_t(*)(nRISC_V_cmd::Exec_component &, nProgram_mdata::Program_mdata_t &);
 
-static uint64_t sys_unimplemented(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_unimplemented(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     FATALF("unimplemented syscall: %lu", exec_compnent.regs.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::a7]);
     return 0;    
 }
 
-static uint64_t sys_exit(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_exit(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto code = GET(a0);
-    if (code == 1)
-    {
-        printf("abort() !\n");
-    }
     exit(code);
 }
 
-static uint64_t sys_close(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_close(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto fd = GET(a0);
 
@@ -43,7 +39,7 @@ static uint64_t sys_close(nRISC_V_cmd::Exec_component &exec_compnent, Program_md
     return 0;
 }
 
-static uint64_t sys_write(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata) 
+static uint64_t sys_write(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata) 
 {
     auto fd = GET(a0);
     auto ptr = GET(a1);
@@ -54,14 +50,14 @@ static uint64_t sys_write(nRISC_V_cmd::Exec_component &exec_compnent, Program_md
     return write(fd, host_ptr, (size_t)len);
 }
 
-static uint64_t sys_fstat(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_fstat(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto fd = GET(a0); 
     auto addr = GET(a1);
     return fstat(fd, reinterpret_cast<struct stat*>(exec_compnent.bus.Get_raw_ptr(addr)));
 }
 
-static uint64_t sys_gettimeofday(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_gettimeofday(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto tv_addr = GET(a0); 
     auto tz_addr = GET(a1);
@@ -74,7 +70,7 @@ static uint64_t sys_gettimeofday(nRISC_V_cmd::Exec_component &exec_compnent, Pro
     return gettimeofday(tv, tz);
 }
 
-static uint64_t sys_brk(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_brk(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto addr = GET(a0);
 
@@ -82,7 +78,7 @@ static uint64_t sys_brk(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdat
         addr = program_mdata.brk_addr;
     assert(addr >= program_mdata.brk_addr);
     assert(addr <= program_mdata.highest_addr);
-    printf("incur addr: %lu \n",addr-program_mdata.brk_addr);
+    //printf("incur addr: %lu \n",addr-program_mdata.brk_addr);
     program_mdata.brk_addr = addr;
 
     return addr;
@@ -111,7 +107,7 @@ static int convert_flags(int flags) {
     return hostflags;
 }
 
-static uint64_t sys_openat(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_openat(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto dirfd = GET(a0); 
     auto nameptr = GET(a1); 
@@ -120,7 +116,7 @@ static uint64_t sys_openat(nRISC_V_cmd::Exec_component &exec_compnent, Program_m
     return openat(dirfd, (char *)exec_compnent.bus.Get_raw_ptr(nameptr), convert_flags(flags), mode);
 }
 
-static uint64_t sys_open(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_open(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto nameptr = GET(a0); 
     auto flags = GET(a1);
@@ -129,7 +125,7 @@ static uint64_t sys_open(nRISC_V_cmd::Exec_component &exec_compnent, Program_mda
     return ret;
 }
 
-static uint64_t sys_lseek(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_lseek(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto fd = GET(a0); 
     auto offset = GET(a1);
@@ -137,7 +133,7 @@ static uint64_t sys_lseek(nRISC_V_cmd::Exec_component &exec_compnent, Program_md
     return lseek(fd, offset, whence);
 }
 
-static uint64_t sys_read(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+static uint64_t sys_read(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     auto fd = GET(a0);
     auto bufptr = GET(a1);
@@ -198,7 +194,7 @@ static const std::unordered_map<uint64_t, syscall_t> syscall_table =
     std::make_pair(SYS_time, sys_unimplemented)
 };
 
-uint64_t nSyscall::Do_syscall(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata)
+uint64_t nSyscall::Do_syscall(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata)
 {
     syscall_t f = nullptr;
 

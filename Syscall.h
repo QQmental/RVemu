@@ -5,5 +5,5 @@
 
 namespace nSyscall
 {
-    uint64_t Do_syscall(nRISC_V_cmd::Exec_component &exec_compnent, Program_mdata_t &program_mdata);
+    uint64_t Do_syscall(nRISC_V_cmd::Exec_component &exec_compnent, nProgram_mdata::Program_mdata_t &program_mdata);
 }

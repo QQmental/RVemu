@@ -14,7 +14,7 @@
 
 bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
 void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
 
@@ -74,7 +74,7 @@ static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, El
 }
 
 
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
 {
     Elf64_Ehdr hdr;
 

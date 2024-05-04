@@ -128,10 +128,6 @@ struct RISC_V_Attributes
 struct CPU_Attribute
 {
     RISC_V_Attributes RISC_V_attributes;
-
-//  address allowed accessed between [base_addr, highest_addr)
-    nRISC_V_cpu_spec::RISC_V_Addr_t highest_addr;
-    RISC_V_Addr_t base_addr;
     nUtil::eEndian endian;
     uint32_t xlen;
 };

@@ -670,7 +670,7 @@ void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg)
 void nRISC_V_cmd::ECALL(Instruction_package &instr_pkg)
 {
     instr_pkg.except = nRISC_V_cmd::execution_exception::ecall;
-    std::cout << __func__ << " "<< std::dec << instr_pkg.regs.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::a7] << "\n"; 
+    //std::cout << __func__ << " "<< std::dec << instr_pkg.regs.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::a7] << "\n"; 
 }
 
 void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg)
@@ -779,7 +779,7 @@ void nRISC_V_cmd::SRAIW(Instruction_package &instr_pkg)
 
     uint32_t original_sign_bit{};
 
-    if (static_cast<Int_t>(rs1_val) < 0)
+    if (Signed_extend<int64_t, 32>(lower32_rs1_val) < 0)
         original_sign_bit = -1;
 
     auto val = (lower32_rs1_val >> shamt) | (original_sign_bit << (32 - shamt - 1)); 
@@ -797,7 +797,7 @@ void nRISC_V_cmd::ADDW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = static_cast<Int_t>(lower32_rs1_val) + static_cast<Int_t>(lower32_rs2_val);
+    rd_val = Signed_extend<int64_t, 32>(lower32_rs1_val) + Signed_extend<int64_t, 32>(lower32_rs2_val);
 }
 
 void nRISC_V_cmd::SLLW(Instruction_package &instr_pkg)
@@ -843,7 +843,7 @@ void nRISC_V_cmd::SUBW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = static_cast<Int_t>(lower32_rs1_val) - static_cast<Int_t>(lower32_rs2_val);
+    rd_val = Signed_extend<int64_t, 32>(lower32_rs1_val) - Signed_extend<int64_t, 32>(lower32_rs2_val);
 }
 
 void nRISC_V_cmd::Illegal_CMD(Instruction_package &instr_pkg)
@@ -859,7 +859,8 @@ void nRISC_V_cmd::NOP(Instruction_package &instr_pkg)
 // I am not sure about purpose of 'HINT'
 void nRISC_V_cmd::HINT(Instruction_package &instr_pkg)
 {
-
+    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
+    printf("%s unimplemented\n", __func__);
 }
 
 void nRISC_V_cmd::C_JAL(Instruction_package &instr_pkg)
@@ -1090,6 +1091,4 @@ void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg)
         rd_val = rs1_val%rs2_val;
         
     rd_val = Signed_extend<Int_t, 32>(rd_val);
-
-    
 }

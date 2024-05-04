@@ -582,6 +582,30 @@ void func7()
 		}
 		free(ptr);
 	}
+
+	{
+		item_t *ptr = malloc(sizeof(item_t) * 128);
+		for(item_t *c = ptr ; c - ptr < 128 ; c++)
+		{
+			if ((c-ptr) + (-20) < 10)
+				*c = 1;
+			else
+				*c = 0;
+		}
+
+		for(item_t *c = ptr ; c - ptr < 128 ; c++)
+		{
+			item_t tmp;
+			if ((c-ptr) + (-20) < 10)
+				tmp = 1;
+			else
+				tmp = 0;
+
+			if (*c != tmp)
+				printf("shof\n");
+		}
+		free(ptr);
+	}
 }
 
 void func8()
@@ -889,19 +913,19 @@ int main(int argc, char* argv[])
 	char *ptr = malloc(256);
 #endif
 
-
+	
 	int num = 0x94879487;
 	char *str = "Hello, this is the emulated world!";
 
-	printf("%x\n", num);
+	printf("%x %d %d\n", num, 5000, 1111);
 	//printf("%d %d", 25, 25);
-	int x = atoi("1234");
-	char arr1[16] = {"aaaaabbbbbcccc"}, arr2[16]= {"cccccbbbbbaaaaa"};
+/* 	int x = atoi("1234");
+	char arr1[16] = {"aaaaabbbbbcccc"}, arr2[16]= {"cccccbbbbbaaaaa"}; */
 
 	//strcpy(arr1, arr2);
-	char *p1 = strdup(arr1);
+/* 	char *p1 = strdup(arr1);
 	printf("%s %s\n",arr1, arr2);	
-	printf("%s %s %s\n", strdup(arr1), strdup(arr2), argv[0]);
+	printf("%s %s %s\n", strdup(arr1), strdup(arr2), argv[0]); */
 	//printf("%d\n", 0x78787878);
 	
 

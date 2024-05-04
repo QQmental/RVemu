@@ -3,11 +3,12 @@
 #include <memory>
 #include <assert.h>
 #include "RISC_V_cpu_spec.h"
+#include "program_mdata.h"
 
 class BUS
 {
 public:
-    BUS(std::unique_ptr<char[]> mem, const nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute) : m_CPU_archietecture(CPU_attribute), m_mem(std::move(mem)){};
+    BUS(std::unique_ptr<char[]> mem, nProgram_mdata::Program_mdata_t &program_mdata) : m_program_mdata(program_mdata), m_mem(std::move(mem)){};
     ~BUS() = default;
 
     // memcpy to the target
@@ -20,26 +21,40 @@ public:
     void* Get_raw_ptr(nRISC_V_cpu_spec::RISC_V_Addr_t addr) 
     {
         CHECK_ERROR(Verify_addr(addr, 1) == true);
-        return &m_mem.get()[addr - m_CPU_archietecture.base_addr];
+        return &m_mem.get()[addr - m_program_mdata.segment_base];
     }
     void Fetch_instruction(const nRISC_V_cpu_spec::RV64_Regster_file &reg_file, nRISC_V_cpu_spec::RISC_V_Instr_t *dst);
-    nUtil::eEndian endian() const { return m_CPU_archietecture.endian; }
+    nUtil::eEndian endian() const { return m_program_mdata.CPU_attributes->endian; }
 
 private:
     bool Verify_addr(nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size) const;
     void Store_data(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size);
-    const nRISC_V_cpu_spec::CPU_Attribute &m_CPU_archietecture;
+    nProgram_mdata::Program_mdata_t &m_program_mdata;
     std::unique_ptr<char[]> m_mem;
 };
 
 inline void BUS::Load_data(void *dst, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size)
 {  
     CHECK_ERROR(Verify_addr(addr, size) == true);
+
+    CHECK_ERROR((   addr + size > m_program_mdata.brk_addr 
+                 && addr + size < *m_program_mdata.stack_top) == false);
+
+    CHECK_ERROR((   addr > m_program_mdata.brk_addr 
+                 && addr < *m_program_mdata.stack_top) == false);
+
+
     memcpy(dst, Get_raw_ptr(addr), size);
 }
 
 inline void BUS::Store_data(nRISC_V_cpu_spec::RV_int_reg_t src, nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size)
 {
+    CHECK_ERROR((   addr + size > m_program_mdata.brk_addr 
+                 && addr + size < *m_program_mdata.stack_top) == false);
+
+    CHECK_ERROR((   addr > m_program_mdata.brk_addr 
+                 && addr < *m_program_mdata.stack_top) == false);
+
     // store low bits to rd reg
     if (nUtil::gHOST_ENDIAN != nUtil::eEndian::little_endian)
         nUtil::Swap_endian(src);
