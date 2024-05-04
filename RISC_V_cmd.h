@@ -33,7 +33,6 @@ enum execution_exception : uint16_t
     none = 0,
     divided_by_zero = 1,
     finish,
-    trap,
     ecall,
 };
 

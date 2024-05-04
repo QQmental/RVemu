@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -354,10 +353,8 @@ void RISC_V_Emulator::start()
     
     nRISC_V_cmd::instr_cmd_t cmd;
 
-    uint32_t cnt = 0;
     while(1)
     {    
-        cnt++;
         bus.Fetch_instruction(reg_file, &instruction);
         
         nRISC_V_cpu_spec::RISC_V_Addr_t next_pc{};
@@ -396,8 +393,6 @@ void RISC_V_Emulator::start()
         // x0 is hard wired 0
         reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x0] = 0;
 
-        CHECK_ERROR(instr_pkg.next_pc >= m_program_mdata.segment_base);
-        CHECK_ERROR(instr_pkg.next_pc + sizeof(nRISC_V_cpu_spec::RISC_V_Instr_t) <= m_program_mdata.highest_addr);
         CHECK_ERROR(instr_pkg.regs.gp_regs[(uint32_t) nRISC_V_cpu_spec::gp_reg_abi_name::sp] % m_program_mdata.stack_pointer_alignment == 0);
         reg_file.pc = instr_pkg.next_pc;
 
