@@ -245,7 +245,7 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name, int argc, cons
     
     m_CPU_archietecture = {};
 
-    m_mem = std::unique_ptr<char[]>(new char[gDEFAULT_USER_HIGHESET_ADDR]{});
+    m_mem = std::unique_ptr<char[]>(new char[gDEFAULT_USER_HIGHESET_ADDR]);
 
     nRISC_V_load_guest::Init_guest_segment_mapping(program_name, m_program_mdata, m_mem.get(), sh_RISC_V_attr);
     nRISC_V_load_guest::Init_guest_RISC_V_attributes(m_CPU_archietecture.RISC_V_attributes, sh_RISC_V_attr.get());
