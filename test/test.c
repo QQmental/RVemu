@@ -84,9 +84,6 @@ void write_mem(void *dst, void *src, size_t size)
 
 uint64_t func4()
 {
-	int64_t num2 = fibo(10);
-	if (num2 != 89)
-		printf("shof\n");
 	for(uint32_t i = 1 ; i < (1<<15) ; i+=16)
 	{
 		if ((i | 0) == 0)
@@ -461,7 +458,7 @@ void func7()
 		free(ptr);
 	} 
 
- 	for(int i = -100 ; i < 31 ; i++)
+ 	for(int i = 0 ; i < 31 ; i++)
 	{
 		item_t *ptr = malloc(sizeof(item_t) * 128);
 		for(item_t *c = ptr ; c - ptr < 128 ; c++)
@@ -917,16 +914,7 @@ int main(int argc, char* argv[])
 	int num = 0x94879487;
 	char *str = "Hello, this is the emulated world!";
 
-	printf("%x %d %d\n", num, 5000, 1111);
-	//printf("%d %d", 25, 25);
-/* 	int x = atoi("1234");
-	char arr1[16] = {"aaaaabbbbbcccc"}, arr2[16]= {"cccccbbbbbaaaaa"}; */
-
-	//strcpy(arr1, arr2);
-/* 	char *p1 = strdup(arr1);
-	printf("%s %s\n",arr1, arr2);	
-	printf("%s %s %s\n", strdup(arr1), strdup(arr2), argv[0]); */
-	//printf("%d\n", 0x78787878);
+	printf("%s %x %ld %d\n", str, num, fibo(30), 1111);
 	
 
 

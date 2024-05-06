@@ -847,7 +847,7 @@ void nRISC_V_cmd::SUBW(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::Illegal_CMD(Instruction_package &instr_pkg)
 {
-    instr_pkg.except = nRISC_V_cmd::execution_exception::trap;
+    instr_pkg.except = nRISC_V_cmd::execution_exception::illegal_cmd;
 }
 
 void nRISC_V_cmd::NOP(Instruction_package &instr_pkg)

@@ -14,9 +14,12 @@
 
 bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
 void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
+
+std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *programe_name);
+
 
 constexpr uint32_t Tag_file = 1;
 constexpr uint32_t Tag_RISCV_stack_align = 4;
@@ -43,11 +46,14 @@ bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr)
         std::cout << "error: size of the read file is small than a elf64 header\n";
         return false;
     }
-          
-    if (auto *magic_ptr = new(hdr)char ; (magic_ptr[0] != '\177') 
-        || (magic_ptr[1] != 'E') 
-        || (magic_ptr[2] != 'L') 
-        || (magic_ptr[3] != 'F'))
+    
+    char magic_arr[4];
+    memcpy(magic_arr, hdr, sizeof(magic_arr));
+
+    if (   (magic_arr[0] != '\177') 
+        || (magic_arr[1] != 'E') 
+        || (magic_arr[2] != 'L') 
+        || (magic_arr[3] != 'F'))
     {
         std::cout << "error: probably the file has no elf header \n";
         return false;
@@ -57,6 +63,9 @@ bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr)
         std::cout << "only RISC_V64 elf file is supported\n";
         return false;
     }
+
+    if (std::fseek(file_stream, hdr->e_phoff + hdr->e_phentsize * hdr->e_phnum, SEEK_SET) != 0)
+        std::cout << "seek file failed. The file is too small to hold each program header table\n";
 
     return true;
 }
@@ -73,8 +82,37 @@ static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, El
     return true;
 }
 
+std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *program_name)
+{
+    Elf64_Ehdr elf_hdr;
 
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char* mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
+    auto file_stream = std::fopen(program_name, "rb");
+
+    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &elf_hdr);
+    assert(f == true);
+
+    Elf64_phdr_t phdr;
+
+    nRISC_V_cpu_spec::RISC_V_Addr_t max{0}, min{0};
+
+    for (int i = 0; i < elf_hdr.e_phnum; i++)
+    {
+        auto f = Load_phdr(file_stream, elf_hdr, i, &phdr);
+        assert(f == true);
+
+        if (phdr.p_type == PT_LOAD)
+        {
+            if (min == 0)
+                min = phdr.p_vaddr;
+
+            max = phdr.p_vaddr + phdr.p_memsz;
+        }
+    }
+
+    return max - min;
+}
+
+void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
 {
     Elf64_Ehdr hdr;
 
@@ -85,9 +123,6 @@ void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nP
     auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
     assert(f == true);
 
-    if (std::fseek(file_stream, hdr.e_phoff + hdr.e_phentsize * hdr.e_phnum, SEEK_SET) != 0)
-        std::cout << "seek file failed. The file is too small to hold each program header table\n";
-    
     Elf64_phdr_t phdr;
 
     program_mdata = {0};
