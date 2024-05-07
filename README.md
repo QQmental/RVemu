@@ -2,8 +2,9 @@
 support risc-v64IMC
 
 # build tool chain
-download Newlib, and build it
-https://github.com/riscv-collab/riscv-gnu-toolchain
+https://github.com/riscv-collab/riscv-gnu-toolchain  
+download Newlib, and build it  
+
 
 # build project
 make
