@@ -6,8 +6,8 @@
 #include <string.h>
 
 #include "RISC_V_load_guest.h"
-#include "RISC_V_emu.h"
 #include "RISC_V_cpu_spec.h"
+#include "program_mdata.h"
 
 #include "elf.h"
 #include "uleb128.h"
