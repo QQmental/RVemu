@@ -320,14 +320,14 @@ void nRISC_V_load_guest::Load_guest_program(Loaded_guest_configure &config)
     config.mem = std::unique_ptr<char[]>(new char[config.runtime_data_space + config.reserved_space + least_space_needed]);
 
     Init_guest_segment_mapping(config.program_name, config.program_mdata, config.mem.get(), sh_RISC_V_attr);
-    Init_guest_RISC_V_attributes(config.cpu_attributes.RISC_V_attributes, sh_RISC_V_attr.get());
+    Init_guest_RISC_V_attributes(config.program_mdata.CPU_attributes.RISC_V_attributes, sh_RISC_V_attr.get());
     
-    if (config.cpu_attributes.RISC_V_attributes.Tag_RISCV_stack_align.first == true)
-        config.program_mdata.stack_pointer_alignment = config.cpu_attributes.RISC_V_attributes.Tag_RISCV_stack_align.second;
+    if (config.program_mdata.CPU_attributes.RISC_V_attributes.Tag_RISCV_stack_align.first == true)
+        config.program_mdata.stack_pointer_alignment = config.program_mdata.CPU_attributes.RISC_V_attributes.Tag_RISCV_stack_align.second;
     else
         config.program_mdata.stack_pointer_alignment = 16;
 
     config.program_mdata.highest_addr = (config.runtime_data_space + config.reserved_space + least_space_needed) & (~(config.program_mdata.stack_pointer_alignment - 1));
 
-    Init_basic_CPU_attributes(config.program_name, config.program_mdata, config.cpu_attributes);
+    Init_basic_CPU_attributes(config.program_name, config.program_mdata, config.program_mdata.CPU_attributes);
 }

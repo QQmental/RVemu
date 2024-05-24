@@ -24,7 +24,7 @@ public:
         return &m_mem.get()[addr - m_program_mdata.segment_base];
     }
     void Fetch_instruction(const nRISC_V_cpu_spec::RV64_Regster_file &reg_file, nRISC_V_cpu_spec::RISC_V_Instr_t *dst);
-    nUtil::eEndian endian() const { return m_program_mdata.CPU_attributes->endian; }
+    nUtil::eEndian endian() const { return m_program_mdata.CPU_attributes.endian; }
 
 private:
     bool Verify_addr(nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size) const;

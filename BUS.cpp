@@ -30,7 +30,7 @@ struct BUS_cmd_package
 bool BUS::Verify_addr(nRISC_V_cpu_spec::RISC_V_Addr_t addr, std::size_t size) const
 {
     BUS_cmd_package pkg(addr, m_program_mdata.segment_base, m_program_mdata.highest_addr, size);
-    auto &attr = m_program_mdata.CPU_attributes->RISC_V_attributes;
+    auto &attr = m_program_mdata.CPU_attributes.RISC_V_attributes;
 
     if ((pkg.addr >= pkg.min) == false)
         return false;

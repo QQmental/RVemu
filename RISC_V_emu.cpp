@@ -211,7 +211,7 @@ static void Init_main_args(nRISC_V_cpu_spec::RV_reg_file &reg_file, BUS &bus, in
 
 RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name, int argc, const char **argv)
 {
-    nRISC_V_load_guest::Loaded_guest_configure config(program_name, &m_program_mdata, &m_CPU_attribute, gRUNTIME_DATA_SPACE, gRESERVED_SPACE, &m_mem);
+    nRISC_V_load_guest::Loaded_guest_configure config(program_name, &m_program_mdata, gRUNTIME_DATA_SPACE, gRESERVED_SPACE, &m_mem);
 
     nRISC_V_load_guest::Load_guest_program(config);
 
@@ -219,7 +219,7 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name, int argc, cons
 
     Regist_RVI_cmd(*m_instruction_map.get());
     
-    m_program_mdata.CPU_attributes = &m_CPU_attribute;
+    //m_program_mdata.CPU_attributes = &m_CPU_attribute;
 
     m_argc = argc;
     m_argv = argv;
@@ -335,7 +335,7 @@ void RISC_V_Emulator::start()
             next_pc = reg_file.pc + 4;
         }
 
-        nRISC_V_cmd::Instruction_package instr_pkg(exec_component, next_pc, m_CPU_attribute);
+        nRISC_V_cmd::Instruction_package instr_pkg(exec_component, next_pc, CPU_attribute());
 
         cmd(instr_pkg);
 

@@ -35,13 +35,11 @@ namespace nRISC_V_load_guest
     {
         Loaded_guest_configure(std::string name, 
                                nProgram_mdata::Program_mdata_t *program_mdata, 
-                               nRISC_V_cpu_spec::CPU_Attribute *cpu_attributes,
                                std::size_t runtime_data_space, 
                                std::size_t reserved_space,
                                std::unique_ptr<char[]> *mem) 
         : program_name(name), 
-          program_mdata(*program_mdata), 
-          cpu_attributes(*cpu_attributes),
+          program_mdata(*program_mdata),
           runtime_data_space(runtime_data_space), 
           reserved_space(reserved_space), 
           mem(*mem)
@@ -51,7 +49,6 @@ namespace nRISC_V_load_guest
 
         const std::string &program_name;
         nProgram_mdata::Program_mdata_t &program_mdata;
-        nRISC_V_cpu_spec::CPU_Attribute &cpu_attributes;
         std::size_t runtime_data_space, reserved_space;
         std::unique_ptr<char[]> &mem;
     };
