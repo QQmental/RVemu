@@ -12,13 +12,12 @@
 #include "elf.h"
 #include "uleb128.h"
 
-bool nRISC_V_load_guest::Load_Elf_header(FILE *file_stream, Elf64_Ehdr *hdr);
 static bool Load_phdr(FILE *file_stream, const Elf64_Ehdr &hdr, uint32_t ith, Elf64_phdr_t *phdr);
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
-void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
+static void Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr);
+static void Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *RISC_V_attributes_section);
 static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32_t &val);
+static void Init_basic_CPU_attributes(std::string program_name, const nProgram_mdata::Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
 
-std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *programe_name);
 
 
 constexpr uint32_t Tag_file = 1;
@@ -112,7 +111,10 @@ std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *program_name
     return max - min;
 }
 
-void nRISC_V_load_guest::Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
+// an array of uint8_t[] is allocted to save RISC_V_attr
+// highest_addr is set to be the highest addr among those loaded segment
+// a piece of memory is allocated for 'sh_RISC_V_attr' when a segment of type 'PT_RISC_V_ATTRIBUTES' exists.
+static void Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
 {
     Elf64_Ehdr hdr;
 
@@ -194,7 +196,7 @@ static std::size_t Parse_uleb128(const uint8_t* src, std::size_t max_len, uint32
 // a null-terminated byte string (NTBS), 
 // otherwise, it's a uleb128 encoded integer.
 
-void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *sh_RISC_V_attr)
+static void Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_Attributes &attr, const uint8_t *sh_RISC_V_attr)
 {
     assert(sh_RISC_V_attr[0] == static_cast<uint8_t>('A'));
 
@@ -281,6 +283,51 @@ void nRISC_V_load_guest::Init_guest_RISC_V_attributes(nRISC_V_cpu_spec::RISC_V_A
     }
 }
 
+static void Init_basic_CPU_attributes(std::string program_name, const nProgram_mdata::Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
+{
+    Elf64_Ehdr hdr;
 
- 
+    auto file_stream = std::fopen(program_name.c_str(), "rb");
 
+    assert(file_stream != nullptr);
+
+    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
+    assert(f == true);
+
+    if (hdr.e_ident[EI_CLASS] == ELFCLASS64)
+        CPU_attribute.xlen = 64;
+    else if (hdr.e_ident[EI_CLASS] == ELFCLASS32)
+        CPU_attribute.xlen = 32;
+
+    if (hdr.e_ident[EI_DATA] == ELFDATA2LSB)
+        CPU_attribute.endian = nUtil::eEndian::little_endian;
+    else if(hdr.e_ident[EI_DATA] == ELFDATA2MSB)
+        CPU_attribute.endian = nUtil::eEndian::big_endian;
+    else if (hdr.e_ident[EI_DATA] == ELFCLASSNONE)
+        CPU_attribute.endian = nUtil::eEndian::other;
+    else
+    {
+        printf("undifined encoding %s %d\n", __func__, __LINE__);
+        abort();
+    }    
+}
+
+void nRISC_V_load_guest::Load_guest_program(Loaded_guest_configure &config)
+{
+    std::unique_ptr<uint8_t[]> sh_RISC_V_attr {};
+    
+    auto least_space_needed =  nRISC_V_load_guest::Get_least_memory_needed(config.program_name.c_str());
+    config.mem = std::unique_ptr<char[]>(new char[config.runtime_data_space + config.reserved_space + least_space_needed]);
+
+    Init_guest_segment_mapping(config.program_name, config.program_mdata, config.mem.get(), sh_RISC_V_attr);
+    Init_guest_RISC_V_attributes(config.cpu_attributes.RISC_V_attributes, sh_RISC_V_attr.get());
+    
+    if (config.cpu_attributes.RISC_V_attributes.Tag_RISCV_stack_align.first == true)
+        config.program_mdata.stack_pointer_alignment = config.cpu_attributes.RISC_V_attributes.Tag_RISCV_stack_align.second;
+    else
+        config.program_mdata.stack_pointer_alignment = 16;
+
+    config.program_mdata.highest_addr = (config.runtime_data_space + config.reserved_space + least_space_needed) & (~(config.program_mdata.stack_pointer_alignment - 1));
+
+    Init_basic_CPU_attributes(config.program_name, config.program_mdata, config.cpu_attributes);
+}

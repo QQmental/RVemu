@@ -17,10 +17,9 @@ using nRISC_V_cpu_spec::RISC_V_Instr_t;
 using nRISC_V_cpu_spec::RV_Instr_component;
 
 //constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gDEFAULT_START_STACK_POINTER = 0x0000'0000'0400'0000;
-constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gRUNTIME_EXTRA_SPACE = 0x0000'0000'0400'0000;
+constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gRUNTIME_DATA_SPACE = 0x0000'0000'0400'0000;
 
-constexpr nRISC_V_cpu_spec::RISC_V_double_word_t
-gRESERVED_SPACE = gRUNTIME_EXTRA_SPACE + (1<<12);
+constexpr nRISC_V_cpu_spec::RISC_V_double_word_t gRESERVED_SPACE = (1<<12);
 
 enum eCPU_state : uint16_t
 {
@@ -59,38 +58,11 @@ inline bool RISC_V_Instruction_map::Regist_cmd(RISC_V_Instr_t cmd_mask, const RI
 }
 
 static bool Processing_instruction(const RISC_V_Instr_t &instruction, RISC_V_Instr_t *mask_dst, RV_Instr_component &component);
-static void Init_basic_CPU_attributes(std::string program_name, const nProgram_mdata::Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute);
+
 static void Regist_RVI_cmd(RISC_V_Instruction_map &);
-static void Init_stack_space(nRISC_V_cpu_spec::RV_reg_file &reg_file, BUS &bus, int argc, const char* argv[], nRISC_V_cpu_spec::RISC_V_Addr_t &brk_addr);
+static void Init_main_args(nRISC_V_cpu_spec::RV_reg_file &reg_file, BUS &bus, int argc, const char* argv[], nRISC_V_cpu_spec::RISC_V_Addr_t &brk_addr);
 
-static void Init_basic_CPU_attributes(std::string program_name, const nProgram_mdata::Program_mdata_t &program_mdata, nRISC_V_cpu_spec::CPU_Attribute &CPU_attribute)
-{
-    Elf64_Ehdr hdr;
 
-    auto file_stream = std::fopen(program_name.c_str(), "rb");
-
-    assert(file_stream != nullptr);
-
-    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
-    assert(f == true);
-
-    if (hdr.e_ident[EI_CLASS] == ELFCLASS64)
-        CPU_attribute.xlen = 64;
-    else if (hdr.e_ident[EI_CLASS] == ELFCLASS32)
-        CPU_attribute.xlen = 32;
-
-    if (hdr.e_ident[EI_DATA] == ELFDATA2LSB)
-        CPU_attribute.endian = nUtil::eEndian::little_endian;
-    else if(hdr.e_ident[EI_DATA] == ELFDATA2MSB)
-        CPU_attribute.endian = nUtil::eEndian::big_endian;
-    else if (hdr.e_ident[EI_DATA] == ELFCLASSNONE)
-        CPU_attribute.endian = nUtil::eEndian::other;
-    else
-    {
-        printf("undifined encoding %s %d\n", __func__, __LINE__);
-        abort();
-    }    
-}
 
 
 static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
@@ -217,7 +189,7 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
 
 // main function args are initialize when initializing stack space
 // brk_addr is modified when argc and argvs are copied into memory
-static void Init_stack_space(nRISC_V_cpu_spec::RV_reg_file &reg_file, BUS &bus, int argc, const char* argv[], nRISC_V_cpu_spec::RISC_V_Addr_t &brk_addr)
+static void Init_main_args(nRISC_V_cpu_spec::RV_reg_file &reg_file, BUS &bus, int argc, const char* argv[], nRISC_V_cpu_spec::RISC_V_Addr_t &brk_addr)
 {
     // for main function argument
     reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] -= 8; // auxp
@@ -239,31 +211,15 @@ static void Init_stack_space(nRISC_V_cpu_spec::RV_reg_file &reg_file, BUS &bus, 
 
 RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name, int argc, const char **argv)
 {
-    std::unique_ptr<uint8_t[]> sh_RISC_V_attr {};
-    
-    m_CPU_archietecture = {};
+    nRISC_V_load_guest::Loaded_guest_configure config(program_name, &m_program_mdata, &m_CPU_attribute, gRUNTIME_DATA_SPACE, gRESERVED_SPACE, &m_mem);
 
-    auto least_space_needed =  nRISC_V_load_guest::Get_least_memory_needed(program_name.c_str());
-    m_mem = std::unique_ptr<char[]>(new char[gRUNTIME_EXTRA_SPACE + least_space_needed]);
-
-    nRISC_V_load_guest::Init_guest_segment_mapping(program_name, m_program_mdata, m_mem.get(), sh_RISC_V_attr);
-    nRISC_V_load_guest::Init_guest_RISC_V_attributes(m_CPU_archietecture.RISC_V_attributes, sh_RISC_V_attr.get());
-    
-    if (m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_stack_align.first == true)
-        m_program_mdata.stack_pointer_alignment = m_CPU_archietecture.RISC_V_attributes.Tag_RISCV_stack_align.second;
-    else
-        m_program_mdata.stack_pointer_alignment = 16;
-
-    // align highest_addr, then the stack space starts from highest_addr
-    m_program_mdata.highest_addr = (gRUNTIME_EXTRA_SPACE + least_space_needed) & (~(m_program_mdata.stack_pointer_alignment - 1));
-
-    Init_basic_CPU_attributes(program_name, m_program_mdata, m_CPU_archietecture);
+    nRISC_V_load_guest::Load_guest_program(config);
 
     m_instruction_map = std::make_unique<RISC_V_Instruction_map>();
 
     Regist_RVI_cmd(*m_instruction_map.get());
     
-    m_program_mdata.CPU_attributes = &m_CPU_archietecture;
+    m_program_mdata.CPU_attributes = &m_CPU_attribute;
 
     m_argc = argc;
     m_argv = argv;
@@ -340,7 +296,7 @@ void RISC_V_Emulator::start()
     reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x2] = m_program_mdata.highest_addr;
     m_program_mdata.stack_top = &reg_file.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::sp]; 
 
-    Init_stack_space(reg_file, bus, m_argc, m_argv, m_program_mdata.brk_addr);
+    Init_main_args(reg_file, bus, m_argc, m_argv, m_program_mdata.brk_addr);
 
     nRISC_V_cpu_spec::RV_Instr_component RV_instr_component = {};
 
@@ -379,7 +335,7 @@ void RISC_V_Emulator::start()
             next_pc = reg_file.pc + 4;
         }
 
-        nRISC_V_cmd::Instruction_package instr_pkg(exec_component, next_pc, m_CPU_archietecture);
+        nRISC_V_cmd::Instruction_package instr_pkg(exec_component, next_pc, m_CPU_attribute);
 
         cmd(instr_pkg);
 
