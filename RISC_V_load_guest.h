@@ -49,7 +49,7 @@ namespace nRISC_V_load_guest
 
         const std::string &program_name;
         nProgram_mdata::Program_mdata_t &program_mdata;
-        std::size_t runtime_data_space, reserved_space;
+        const std::size_t runtime_data_space, reserved_space;
         std::unique_ptr<char[]> &mem;
     };
 

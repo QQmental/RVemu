@@ -125,6 +125,9 @@ static void Init_guest_segment_mapping(std::string program_name, nProgram_mdata:
     auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
     assert(f == true);
 
+    if (hdr.e_type != ET_EXEC)
+        nUtil::FATAL("input program should be an executable file\n");
+
     Elf64_phdr_t phdr;
 
     program_mdata = {0};
