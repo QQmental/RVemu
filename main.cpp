@@ -18,13 +18,10 @@
 int main(int argc, char *argv[])
 {
     const char *argv_arr[1] ;
-    argv_arr[0] = "./test.exe";
-    RISC_V_Emulator emu("./test.exe", 1, argv_arr);
+    argv_arr[0] = "./test.elf";
+    RISC_V_Emulator emu("./test.elf", 1, argv_arr);
 
     auto program_mdata = emu.program_mdata();
 
     emu.start();
-    
-    for(int i = 0 ; i < argc ; i++)
-        printf("%s\n",argv[i]);
 }
