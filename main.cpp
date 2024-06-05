@@ -18,8 +18,8 @@
 int main(int argc, char *argv[])
 {
     const char *argv_arr[1] ;
-    argv_arr[0] = "./test.elf";
-    RISC_V_Emulator emu("./test.elf", 1, argv_arr);
+    argv_arr[0] = "./rv64ui-p-addw";
+    RISC_V_Emulator emu("./rv64ui-p-addw", 1, argv_arr);
 
     auto program_mdata = emu.program_mdata();
 

@@ -71,7 +71,7 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     map.map.max_load_factor(0.25);
     RISC_V_Instruction_map::Command_attribute attr;
 
-    bool regist_success {};
+    [[maybe_unused]] bool regist_success {};
 
     #define REGIST_CMD(CMD_MASK, CMD, OP_TYPE)\
     do\
@@ -322,7 +322,7 @@ void RISC_V_Emulator::start()
         }
         else
         {
-            bool opcode_type_status = Processing_instruction(instruction, &masked_instruction, RV_instr_component);
+            [[maybe_unused]] bool opcode_type_status = Processing_instruction(instruction, &masked_instruction, RV_instr_component);
 
             CHECK_ERROR(opcode_type_status == true);
 

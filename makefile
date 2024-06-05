@@ -7,8 +7,10 @@ LINK =
 dbg = off
 ifeq ($(dbg), on)
 	CPP_FLAG += -g -fsanitize=undefined
-else
+else ifeq ($(dbg), off)
 	CPP_FLAG += -O2 -DNDEBUG
+else
+    $(error dbg can't be '$(dbg)', it should be either 'on' or 'off')
 endif
 
 # add coverage record or not

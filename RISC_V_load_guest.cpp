@@ -112,7 +112,7 @@ std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *program_name
 }
 
 // an array of uint8_t[] is allocted to save RISC_V_attr
-// highest_addr is set to be the highest addr among those loaded segment
+// program_mdata.highest_addr is set to be the highest addr among those loaded segment
 // a piece of memory is allocated for 'sh_RISC_V_attr' when a segment of type 'PT_RISC_V_ATTRIBUTES' exists.
 static void Init_guest_segment_mapping(std::string program_name, nProgram_mdata::Program_mdata_t &program_mdata, char *mem, std::unique_ptr<uint8_t[]> &sh_RISC_V_attr)
 {
@@ -122,7 +122,7 @@ static void Init_guest_segment_mapping(std::string program_name, nProgram_mdata:
 
     assert(file_stream != nullptr);
 
-    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
+    [[maybe_unused]] auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
     assert(f == true);
 
     if (hdr.e_type != ET_EXEC)
@@ -294,7 +294,7 @@ static void Init_basic_CPU_attributes(std::string program_name, const nProgram_m
 
     assert(file_stream != nullptr);
 
-    auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
+    [[maybe_unused]] auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
     assert(f == true);
 
     if (hdr.e_ident[EI_CLASS] == ELFCLASS64)
@@ -330,7 +330,7 @@ void nRISC_V_load_guest::Load_guest_program(Loaded_guest_configure &config)
     else
         config.program_mdata.stack_pointer_alignment = 16;
 
-    config.program_mdata.highest_addr = (config.runtime_data_space + config.reserved_space + least_space_needed) & (~(config.program_mdata.stack_pointer_alignment - 1));
+    config.program_mdata.highest_addr = (config.program_mdata.highest_addr + config.runtime_data_space + config.reserved_space) & (~(config.program_mdata.stack_pointer_alignment - 1));
 
     Init_basic_CPU_attributes(config.program_name, config.program_mdata, config.program_mdata.CPU_attributes);
 }
