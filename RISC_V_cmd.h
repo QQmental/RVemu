@@ -175,6 +175,7 @@ void NOP(Instruction_package &instr_pkg);
 void HINT(Instruction_package &instr_pkg);
 void C_JAL(Instruction_package &instr_pkg);
 
+
 /* 
   C.JALR expands to jalr x1, 0(rs1). 
   Strictly speaking, C.JALR does not expand exactly to a base RVI instruction as the value added
@@ -182,6 +183,12 @@ void C_JAL(Instruction_package &instr_pkg);
 */
 void C_JALR(Instruction_package &instr_pkg);
 
+void CSRRW(Instruction_package &instr_pkg);
+void CSRRS(Instruction_package &instr_pkg);
+void CSRRWI(Instruction_package &instr_pkg);
+void CSRRC(Instruction_package &instr_pkg);
+void CSRRSI(Instruction_package &instr_pkg);
+void CSRRCI(Instruction_package &instr_pkg);
 
 
 }

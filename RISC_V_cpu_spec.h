@@ -2,6 +2,7 @@
 #include <string>
 #include <stdint.h>
 #include "util.h"
+#include "RISC_V_extension.h"
 
 namespace nRISC_V_cpu_spec
 {
@@ -73,6 +74,11 @@ struct RV32_Regster_file
     RISC_V_Addr_t pc;
     
     RV_int_reg_t gp_regs[32];
+    
+    // control status registers
+#if RISC_V_EXT_ZICSR == 1
+    RV_int_reg_t csrs[1<<12];
+#endif
 
     enum reg_num : uint32_t
     {
@@ -97,6 +103,11 @@ struct RV64_Regster_file
     RISC_V_Addr_t pc;
 
     RV_int_reg_t gp_regs[32];
+    
+    // control status registers
+    #if RISC_V_EXT_ZICSR == 1
+        RV_int_reg_t csrs[1<<12];
+    #endif
 
     enum reg_num : uint32_t
     {

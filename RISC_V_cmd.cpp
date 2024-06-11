@@ -69,13 +69,6 @@ void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg);
 
-void nRISC_V_cmd::CSRRW(Instruction_package &instr_pkg);
-void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg);
-void nRISC_V_cmd::CSRRC(Instruction_package &instr_pkg);
-void nRISC_V_cmd::CSRRWI(Instruction_package &instr_pkg);
-void nRISC_V_cmd::CSRRSI(Instruction_package &instr_pkg);
-void nRISC_V_cmd::CSRRCI(Instruction_package &instr_pkg);
-
 void nRISC_V_cmd::ADDIW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SLLIW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SRLIW(Instruction_package &instr_pkg);
@@ -102,6 +95,13 @@ void nRISC_V_cmd::DIVW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::DIVUW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::REMW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg);
+
+void nRISC_V_cmd::CSRRW(Instruction_package &instr_pkg);
+void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg);
+void nRISC_V_cmd::CSRRWI(Instruction_package &instr_pkg);
+void nRISC_V_cmd::CSRRC(Instruction_package &instr_pkg);
+void nRISC_V_cmd::CSRRSI(Instruction_package &instr_pkg);
+void nRISC_V_cmd::CSRRCI(Instruction_package &instr_pkg);
 
 template <typename ret_Int_t, unsigned B>
 ret_Int_t Signed_extend(RISC_V_double_word_t num)
@@ -647,77 +647,59 @@ void nRISC_V_cmd::JALR(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg)
 {
-    assert(instr_pkg.RV_instr_component.rd == 0 && instr_pkg.RV_instr_component.rs1 == 0);
-
-    switch (instr_pkg.RV_instr_component.imm)
+    switch(instr_pkg.RV_instr_component.imm)
     {
         case 0:
-            nRISC_V_cmd::ECALL(instr_pkg);
-            break;
-        case 1:
-            nRISC_V_cmd::EBREAK(instr_pkg);
-        break;            
-        default:
-            printf("undifined imm in %s\n", __func__);
-            
+            ECALL(instr_pkg);
         break;
+
+        case 1:
+            EBREAK(instr_pkg);
+        break;
+
+// ref: https://ithelp.ithome.com.tw/m/articles/10337732
+
+        case 0x105: // wfi
+        {
+            //implement as nop ...
+            break;
+        }
+        case 0x302: //mret
+        {
+            instr_pkg.next_pc = instr_pkg.regs.csrs[0x341]; //epc = 0x341
+            break;
+        }
+
+        default:
+            nUtil::FATAL("unknown SYSTEM");
     }
-
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
 }
-
 void nRISC_V_cmd::ECALL(Instruction_package &instr_pkg)
 {
     instr_pkg.except = nRISC_V_cmd::execution_exception::ecall;
-    //std::cout << __func__ << " "<< std::dec << instr_pkg.regs.gp_regs[nRISC_V_cpu_spec::gp_reg_abi_name::a7] << "\n"; 
+
+// ref: https://ithelp.ithome.com.tw/m/articles/10337732
+    #if RSIC_V_EXT_ZICSR == 1
+    instr_pkg.regs.csrs[0x341] = instr_pkg.regs.pc; //epc = pc
+    instr_pkg.next_pc = instr_pkg.regs.csrs[0x305]; //mtvec = 0x305
+    #endif
 }
 
 void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg)
 {
     instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
     printf("%s unimplemented\n", __func__);
+
+// ref: https://ithelp.ithome.com.tw/m/articles/10337732
+    #if RSIC_V_EXT_ZICSR == 1
+    instr_pkg.regs.csrs[0x341] = instr_pkg.regs.pc; //epc = pc
+    instr_pkg.next_pc = instr_pkg.regs.csrs[0x305]; //mtvec = 0x305
+    #endif
 }
 
 void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg)
 {
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
-}
-
-void nRISC_V_cmd::CSRRW(Instruction_package &instr_pkg)
-{
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
-}
-
-void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg)
-{
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
-}
-
- void nRISC_V_cmd::CSRRC(Instruction_package &instr_pkg)
-{
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
-}
-
- void nRISC_V_cmd::CSRRWI(Instruction_package &instr_pkg)
-{
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
-}
-
- void nRISC_V_cmd::CSRRSI(Instruction_package &instr_pkg)
-{
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
-}
-
- void nRISC_V_cmd::CSRRCI(Instruction_package &instr_pkg)
-{
-    instr_pkg.except = nRISC_V_cmd::execution_exception::finish;
-    printf("%s unimplemented\n", __func__);
+    // do nothing in the current version
 }
 
 void nRISC_V_cmd::ADDIW(Instruction_package &instr_pkg)
@@ -1090,4 +1072,76 @@ void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg)
         rd_val = rs1_val%rs2_val;
         
     rd_val = Signed_extend<Int_t, 32>(rd_val);
+}
+
+void nRISC_V_cmd::CSRRW(Instruction_package &instr_pkg)
+{
+    auto csrno = instr_pkg.RV_instr_component.imm;
+    auto &csr_val = instr_pkg.regs.csrs[csrno];
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+    
+    if (instr_pkg.RV_instr_component.rd != nRISC_V_cpu_spec::RV_reg_file::x0)
+        rd_val = csr_val;
+
+    csr_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+}
+
+void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg)
+{
+    auto csrno = instr_pkg.RV_instr_component.imm;
+    auto &csr_val = instr_pkg.regs.csrs[csrno];
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+    
+    rd_val = csr_val;
+
+    if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
+        csr_val = rd_val | instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+}
+
+void nRISC_V_cmd::CSRRC(Instruction_package &instr_pkg)
+{
+    auto csrno = instr_pkg.RV_instr_component.imm;
+    auto &csr_val = instr_pkg.regs.csrs[csrno];
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+    
+    rd_val = csr_val;
+
+    if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
+        csr_val = rd_val & ~instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];    
+}
+
+void nRISC_V_cmd::CSRRWI(Instruction_package &instr_pkg)
+{
+    auto csrno = instr_pkg.RV_instr_component.imm;
+    auto &csr_val = instr_pkg.regs.csrs[csrno];
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+    
+    if (instr_pkg.RV_instr_component.rd != nRISC_V_cpu_spec::RV_reg_file::x0)
+        rd_val = csr_val;
+    
+    csr_val = instr_pkg.RV_instr_component.rs1;
+}
+
+void nRISC_V_cmd::CSRRSI(Instruction_package &instr_pkg)
+{
+    auto csrno = instr_pkg.RV_instr_component.imm;
+    auto &csr_val = instr_pkg.regs.csrs[csrno];
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+    
+    rd_val = csr_val;
+
+    if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
+        csr_val = rd_val | instr_pkg.RV_instr_component.rs1;
+}
+
+void nRISC_V_cmd::CSRRCI(Instruction_package &instr_pkg)
+{
+    auto csrno = instr_pkg.RV_instr_component.imm;
+    auto &csr_val = instr_pkg.regs.csrs[csrno];
+    auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
+    
+    rd_val = csr_val;
+
+    if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
+        csr_val = rd_val & ~instr_pkg.RV_instr_component.rs1;       
 }

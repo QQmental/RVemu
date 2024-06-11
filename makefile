@@ -1,6 +1,6 @@
 make = make
 cc = g++
-CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall
+CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall -DRISC_V_EXT_ZICSR=1
 LINK =
 
 # debug flag or not
@@ -52,7 +52,7 @@ main.o :main.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@
 
 RISC_V_cmd.o :RISC_V_cmd.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+	$(cc) $< $(CPP_FLAG)  -c -o $@
 
 RISC_V_emu.o :RISC_V_emu.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@

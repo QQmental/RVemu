@@ -88,7 +88,10 @@ std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *program_name
     auto file_stream = std::fopen(program_name, "rb");
 
     auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &elf_hdr);
-    assert(f == true);
+    
+    if(f != true)
+        nUtil::FATAL("fail to Load_Elf_header");
+    
 
     Elf64_phdr_t phdr;
 
@@ -97,7 +100,8 @@ std::size_t nRISC_V_load_guest::Get_least_memory_needed(const char *program_name
     for (int i = 0; i < elf_hdr.e_phnum; i++)
     {
         auto f = Load_phdr(file_stream, elf_hdr, i, &phdr);
-        assert(f == true);
+        if(f != true)
+            nUtil::FATAL("fail to load program header");
 
         if (phdr.p_type == PT_LOAD)
         {
@@ -120,10 +124,15 @@ static void Init_guest_segment_mapping(std::string program_name, nProgram_mdata:
 
     auto file_stream = std::fopen(program_name.c_str(), "rb");
 
-    assert(file_stream != nullptr);
+    if(file_stream == nullptr)
+    {
+        std::string err_msg = std::string("fail to open ") + program_name.c_str();
+        nUtil::FATAL(err_msg.c_str());
+    }
+
 
     [[maybe_unused]] auto f = nRISC_V_load_guest::Load_Elf_header(file_stream, &hdr);
-    assert(f == true);
+    CHECK_ERROR(f == true);
 
     if (hdr.e_type != ET_EXEC)
         nUtil::FATAL("input program should be an executable file\n");

@@ -120,8 +120,11 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     REGIST_CMD(0b010000000000'00000'101'00000'0010011, SRAI,  I);
 
     REGIST_CMD(0b000000000000'00000'000'00000'0001111, FENCE,  I);
-    REGIST_CMD(0b000000000000'00000'000'00000'1110011, ECALL,  I);
-    REGIST_CMD(0b000000000001'00000'000'00000'1110011, EBREAK,  I);
+
+    // why ecall and ebreak aren't registed?
+    // the imm field is used to distingush those functions, it's too troublesome
+    REGIST_CMD(0b000000000000'00000'000'00000'1110011, SYSTEM,  I);
+
 
     //RV64I
     REGIST_CMD(0b000000000000'00000'110'00000'0000011, LWU,   I);
@@ -184,6 +187,14 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     //RV64I
     REGIST_CMD(0b0000000'00000'00000'011'00000'0100011, SD,   S);
 
+    //Zicsr
+    REGIST_CMD(0b000000000000'00000'001'00000'1110011, CSRRW, I);
+    REGIST_CMD(0b000000000000'00000'010'00000'1110011, CSRRS, I);
+    REGIST_CMD(0b000000000000'00000'011'00000'1110011, CSRRWI, I);
+    REGIST_CMD(0b000000000000'00000'100'00000'1110011, CSRRC, I);
+    REGIST_CMD(0b000000000000'00000'101'00000'1110011, CSRRSI, I);
+    REGIST_CMD(0b000000000000'00000'110'00000'1110011, CSRRCI, I);
+
     #undef REGIST_CMD
 }
 
@@ -218,8 +229,6 @@ RISC_V_Emulator::RISC_V_Emulator(const std::string &program_name, int argc, cons
     m_instruction_map = std::make_unique<RISC_V_Instruction_map>();
 
     Regist_RVI_cmd(*m_instruction_map.get());
-    
-    //m_program_mdata.CPU_attributes = &m_CPU_attribute;
 
     m_argc = argc;
     m_argv = argv;
