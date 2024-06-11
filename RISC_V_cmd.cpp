@@ -778,7 +778,9 @@ void nRISC_V_cmd::ADDW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = Signed_extend<int64_t, 32>(lower32_rs1_val) + Signed_extend<int64_t, 32>(lower32_rs2_val);
+    rd_val = lower32_rs1_val + lower32_rs2_val;
+
+    rd_val = Signed_extend<int64_t, 32>(rd_val);
 }
 
 void nRISC_V_cmd::SLLW(Instruction_package &instr_pkg)
@@ -824,7 +826,9 @@ void nRISC_V_cmd::SUBW(Instruction_package &instr_pkg)
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
-    rd_val = Signed_extend<int64_t, 32>(lower32_rs1_val) - Signed_extend<int64_t, 32>(lower32_rs2_val);
+    rd_val = lower32_rs1_val - lower32_rs2_val;
+
+    rd_val = Signed_extend<int64_t, 32>(rd_val);
 }
 
 void nRISC_V_cmd::Illegal_CMD(Instruction_package &instr_pkg)

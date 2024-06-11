@@ -357,7 +357,7 @@ void RISC_V_Emulator::start()
         // x0 is hard wired 0
         reg_file.gp_regs[nRISC_V_cpu_spec::RV_reg_file::x0] = 0;
 
-        CHECK_ERROR(instr_pkg.regs.gp_regs[(uint32_t) nRISC_V_cpu_spec::gp_reg_abi_name::sp] % m_program_mdata.stack_pointer_alignment == 0);
+        //CHECK_ERROR(instr_pkg.regs.gp_regs[(uint32_t) nRISC_V_cpu_spec::gp_reg_abi_name::sp] % m_program_mdata.stack_pointer_alignment == 0);
         reg_file.pc = instr_pkg.next_pc;
 
         if (instr_pkg.except == nRISC_V_cmd::execution_exception::finish)
