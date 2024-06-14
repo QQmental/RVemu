@@ -6,7 +6,7 @@ LINK =
 # debug flag or not
 dbg = off
 ifeq ($(dbg), on)
-	CPP_FLAG += -g -fsanitize=undefined
+	CPP_FLAG += -g -fsanitize=undefined,address  
 else ifeq ($(dbg), off)
 	CPP_FLAG += -O2 -DNDEBUG
 else
