@@ -1,12 +1,14 @@
 make = make
+EXTENSION_flag = -DRISC_V_EXT_ZICSR=1
+
 cc = g++
-CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall -DRISC_V_EXT_ZICSR=1
+CPP_FLAG = -std=c++17 -pedantic -Wparentheses -DXLEN=64 -MMD -Wall $(EXTENSION_flag)
 LINK =
 
 # debug flag or not
 dbg = off
 ifeq ($(dbg), on)
-	CPP_FLAG += -g -fsanitize=undefined,address  
+	CPP_FLAG += -g -fsanitize=undefined
 else ifeq ($(dbg), off)
 	CPP_FLAG += -O2 -DNDEBUG
 else

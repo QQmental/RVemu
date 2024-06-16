@@ -68,6 +68,7 @@ void nRISC_V_cmd::ECALL(Instruction_package &instr_pkg);
 void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg);
+void nRISC_V_cmd::FENCE_I(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::ADDIW(Instruction_package &instr_pkg);
 void nRISC_V_cmd::SLLIW(Instruction_package &instr_pkg);
@@ -121,7 +122,7 @@ void nRISC_V_cmd::ADDI(Instruction_package &instr_pkg)
     
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
     
-    rd_val = se_imm + static_cast<Int_t>(rs1_val);
+    rd_val = se_imm + rs1_val;
 }
 
 void nRISC_V_cmd::ADD(Instruction_package &instr_pkg)
@@ -702,6 +703,11 @@ void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg)
     // do nothing in the current version
 }
 
+void nRISC_V_cmd::FENCE_I(Instruction_package &instr_pkg)
+{
+    // do nothing in the current version
+}
+
 void nRISC_V_cmd::ADDIW(Instruction_package &instr_pkg)
 {
     auto se_imm = Signed_extend<int64_t, 12>(static_cast<RISC_V_word_t>(instr_pkg.RV_instr_component.imm));
@@ -893,10 +899,12 @@ void nRISC_V_cmd::MUL(Instruction_package &instr_pkg)
 void nRISC_V_cmd::MULH(Instruction_package &instr_pkg)
 {
     nRISC_V_cmd::gDOUBLE_XLEN_T rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+    rs1_val = Signed_extend<nRISC_V_cmd::gSDOUBLE_XLEN_T, 64>(rs1_val);
 
     nRISC_V_cmd::gDOUBLE_XLEN_T rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
+    rs2_val = Signed_extend<nRISC_V_cmd::gSDOUBLE_XLEN_T, 64>(rs2_val);
 
-    auto negate = (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs1_val) < 0) != (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs2_val) < 0);
+    auto negate = (((nRISC_V_cmd::gSDOUBLE_XLEN_T)rs1_val) < 0) != (((nRISC_V_cmd::gSDOUBLE_XLEN_T)rs2_val) < 0);
 
     if (((nRISC_V_cmd::gSDOUBLE_XLEN_T )rs1_val) < 0)
         rs1_val = -rs1_val;
@@ -913,6 +921,7 @@ void nRISC_V_cmd::MULH(Instruction_package &instr_pkg)
 void nRISC_V_cmd::MULHSU(Instruction_package &instr_pkg)
 {
     nRISC_V_cmd::gDOUBLE_XLEN_T rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+    rs1_val = Signed_extend<nRISC_V_cmd::gSDOUBLE_XLEN_T, 64>(rs1_val);
 
     nRISC_V_cmd::gDOUBLE_XLEN_T rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2]; 
 
@@ -1016,8 +1025,10 @@ void nRISC_V_cmd::REMU(Instruction_package &instr_pkg)
 void nRISC_V_cmd::DIVW(Instruction_package &instr_pkg)
 {
     Int_t rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+    rs1_val = Signed_extend<Int_t, 32>(rs1_val);
 
     Int_t rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+    rs2_val = Signed_extend<Int_t, 32>(rs2_val);
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 
@@ -1047,8 +1058,10 @@ void nRISC_V_cmd::DIVUW(Instruction_package &instr_pkg)
 void nRISC_V_cmd::REMW(Instruction_package &instr_pkg)
 {
     Int_t rs1_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1] & 0xFFFF'FFFF;
+    rs1_val = Signed_extend<Int_t, 32>(rs1_val);
 
     Int_t rs2_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs2] & 0xFFFF'FFFF;
+    rs2_val = Signed_extend<Int_t, 32>(rs2_val);
 
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
 

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define FATALF(fmt, ...) (fprintf(stderr, "fatal: %s:%d " fmt, __FILE__, __LINE__, __VA_ARGS__), abort())
+#define FATALF(fmt, ...) (fprintf(stderr, "fatal: %s:%d\n" fmt, __FILE__, __LINE__, __VA_ARGS__), abort())
 
 
 #ifdef NDEBUG

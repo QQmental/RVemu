@@ -136,6 +136,7 @@ void ECALL(Instruction_package &instr_pkg);
 void EBREAK(Instruction_package &instr_pkg);
 
 void FENCE(Instruction_package &instr_pkg);
+void FENCE_I(Instruction_package &instr_pkg);
 
 void CSRRW(Instruction_package &instr_pkg);
 void CSRRS(Instruction_package &instr_pkg);

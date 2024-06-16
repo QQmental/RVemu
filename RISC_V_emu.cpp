@@ -120,6 +120,7 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     REGIST_CMD(0b010000000000'00000'101'00000'0010011, SRAI,  I);
 
     REGIST_CMD(0b000000000000'00000'000'00000'0001111, FENCE,  I);
+    REGIST_CMD(0b000000000000'00000'001'00000'0001111, FENCE_I,  I);
 
     // why ecall and ebreak aren't registed?
     // the imm field is used to distingush those functions, it's too troublesome
