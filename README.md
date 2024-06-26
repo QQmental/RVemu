@@ -16,7 +16,7 @@ make dbg=on
 make cov=on  
 
 # run project
-./main.exe
+./main.exe path_to_your_emulated_program
 
 # create code coverage report
 make gen_cov_reocrd
