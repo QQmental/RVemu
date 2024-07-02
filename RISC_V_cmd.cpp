@@ -33,6 +33,7 @@ void nRISC_V_cmd::SLL(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::SRA(Instruction_package &instr_pkg);
 void nRISC_V_cmd::LUI(Instruction_package &instr_pkg);
+void nRISC_V_cmd::AUIPC(Instruction_package &instr_pkg);
 
 void nRISC_V_cmd::XORI(Instruction_package &instr_pkg);
 void nRISC_V_cmd::ORI(Instruction_package &instr_pkg);

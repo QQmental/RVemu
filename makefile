@@ -38,7 +38,7 @@ ifeq ($(make), mingw32-make)
 	RM = DEL
 endif
 
-.PHONY: clean all add_test_src gen_cov_record
+.PHONY: clean all add_test_src gen_cov_record run_test
 
 all:$(OBJS) $(BIN)
 	make add_test_src
@@ -54,7 +54,7 @@ main.o :main.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@
 
 RISC_V_cmd.o :RISC_V_cmd.cpp
-	$(cc) $< $(CPP_FLAG)  -c -o $@
+	$(cc) $< $(CPP_FLAG) -c -o $@
 
 RISC_V_emu.o :RISC_V_emu.cpp
 	$(cc) $< $(CPP_FLAG) -c -o $@
@@ -71,10 +71,14 @@ Syscall.o :Syscall.cpp
 -include $(DEPS)
 
 clean:
+	make clean -C ./test
 	$(foreach dep, $(DEPS), $(RM) $(dep);)
 	$(foreach obj, $(OBJS), $(RM) $(obj);)
 	$(RM) $(wildcard ./*.exe) *.gcno *.gcda
 	rm -rf result
+
+run_test:
+	python3 ./run_test.py
 
 add_test_src:
 	make -C ./test

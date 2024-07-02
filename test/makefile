@@ -1,4 +1,4 @@
-export PATH=$PATH:/opt/riscv/bin
+export PATH+=$PATH:/opt/riscv/bin
 
 target = ../test.elf ../test_dump
 
@@ -12,4 +12,5 @@ $(target): test.c test3.c
 	riscv64-unknown-elf-objdump -d ../test3.elf > ../test3_dump
 
 clean:
-	$(shell rm ../test.elf ../test_dump)
+	$(shell rm -rf ../test.elf ../test_dump)
+	$(shell rm -rf ../test3.elf ../test3_dump)
