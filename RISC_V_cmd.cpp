@@ -668,7 +668,9 @@ void nRISC_V_cmd::SYSTEM(Instruction_package &instr_pkg)
         }
         case 0x302: //mret
         {
+#if RISC_V_EXT_ZICSR == 1
             instr_pkg.next_pc = instr_pkg.regs.csrs[0x341]; //epc = 0x341
+#endif            
             break;
         }
 
@@ -681,10 +683,10 @@ void nRISC_V_cmd::ECALL(Instruction_package &instr_pkg)
     instr_pkg.except = nRISC_V_cmd::execution_exception::ecall;
 
 // ref: https://ithelp.ithome.com.tw/m/articles/10337732
-    #if RSIC_V_EXT_ZICSR == 1
+#if RSIC_V_EXT_ZICSR == 1
     instr_pkg.regs.csrs[0x341] = instr_pkg.regs.pc; //epc = pc
     instr_pkg.next_pc = instr_pkg.regs.csrs[0x305]; //mtvec = 0x305
-    #endif
+ #endif
 }
 
 void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg)
@@ -693,10 +695,10 @@ void nRISC_V_cmd::EBREAK(Instruction_package &instr_pkg)
     printf("%s unimplemented\n", __func__);
 
 // ref: https://ithelp.ithome.com.tw/m/articles/10337732
-    #if RSIC_V_EXT_ZICSR == 1
+#if RSIC_V_EXT_ZICSR == 1
     instr_pkg.regs.csrs[0x341] = instr_pkg.regs.pc; //epc = pc
     instr_pkg.next_pc = instr_pkg.regs.csrs[0x305]; //mtvec = 0x305
-    #endif
+#endif
 }
 
 void nRISC_V_cmd::FENCE(Instruction_package &instr_pkg)
@@ -1094,18 +1096,21 @@ void nRISC_V_cmd::REMUW(Instruction_package &instr_pkg)
 
 void nRISC_V_cmd::CSRRW(Instruction_package &instr_pkg)
 {
+#if RISC_V_EXT_ZICSR == 1
     auto csrno = instr_pkg.RV_instr_component.imm;
     auto &csr_val = instr_pkg.regs.csrs[csrno];
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
-    
+
     if (instr_pkg.RV_instr_component.rd != nRISC_V_cpu_spec::RV_reg_file::x0)
         rd_val = csr_val;
 
     csr_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+#endif
 }
 
 void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg)
 {
+#if RISC_V_EXT_ZICSR == 1
     auto csrno = instr_pkg.RV_instr_component.imm;
     auto &csr_val = instr_pkg.regs.csrs[csrno];
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
@@ -1114,10 +1119,12 @@ void nRISC_V_cmd::CSRRS(Instruction_package &instr_pkg)
 
     if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
         csr_val = rd_val | instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+#endif
 }
 
 void nRISC_V_cmd::CSRRC(Instruction_package &instr_pkg)
 {
+#if RISC_V_EXT_ZICSR == 1
     auto csrno = instr_pkg.RV_instr_component.imm;
     auto &csr_val = instr_pkg.regs.csrs[csrno];
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
@@ -1125,11 +1132,13 @@ void nRISC_V_cmd::CSRRC(Instruction_package &instr_pkg)
     rd_val = csr_val;
 
     if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
-        csr_val = rd_val & ~instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];    
+        csr_val = rd_val & ~instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rs1];
+#endif 
 }
 
 void nRISC_V_cmd::CSRRWI(Instruction_package &instr_pkg)
 {
+#if RISC_V_EXT_ZICSR == 1    
     auto csrno = instr_pkg.RV_instr_component.imm;
     auto &csr_val = instr_pkg.regs.csrs[csrno];
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
@@ -1138,10 +1147,12 @@ void nRISC_V_cmd::CSRRWI(Instruction_package &instr_pkg)
         rd_val = csr_val;
     
     csr_val = instr_pkg.RV_instr_component.rs1;
+#endif
 }
 
 void nRISC_V_cmd::CSRRSI(Instruction_package &instr_pkg)
 {
+#if RISC_V_EXT_ZICSR == 1
     auto csrno = instr_pkg.RV_instr_component.imm;
     auto &csr_val = instr_pkg.regs.csrs[csrno];
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
@@ -1150,10 +1161,12 @@ void nRISC_V_cmd::CSRRSI(Instruction_package &instr_pkg)
 
     if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
         csr_val = rd_val | instr_pkg.RV_instr_component.rs1;
+#endif
 }
 
 void nRISC_V_cmd::CSRRCI(Instruction_package &instr_pkg)
 {
+#if RISC_V_EXT_ZICSR == 1
     auto csrno = instr_pkg.RV_instr_component.imm;
     auto &csr_val = instr_pkg.regs.csrs[csrno];
     auto &rd_val = instr_pkg.regs.gp_regs[instr_pkg.RV_instr_component.rd];
@@ -1162,4 +1175,5 @@ void nRISC_V_cmd::CSRRCI(Instruction_package &instr_pkg)
 
     if (instr_pkg.RV_instr_component.rs1 != nRISC_V_cpu_spec::RV_reg_file::x0)
         csr_val = rd_val & ~instr_pkg.RV_instr_component.rs1;       
+#endif
 }
