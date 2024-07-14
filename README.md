@@ -19,5 +19,8 @@ make cov=on
 # run project
 ./main.exe path_to_your_emulated_program
 
+# run my example 
+./main.exe example.elf QQman 
+
 # create code coverage report
 make gen_cov_reocrd
