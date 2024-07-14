@@ -1,9 +1,11 @@
 #pragma once
 
-// copy from here with some modification
-// https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/elf.h#L220
+// copied from here with some modification
+/*
+https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/elf.h#L220
+https://github.com/lattera/glibc/blob/master/elf/elf.h
+*/
 
-/* 64-bit ELF base types. */
 #include <stdint.h>
 
 typedef uint32_t	Elf32_Addr;
@@ -160,42 +162,163 @@ typedef struct {
 } Elf64_phdr_t;
 
 /* sh_type */
-#define SHT_NULL	0
-#define SHT_PROGBITS	1
-#define SHT_SYMTAB	2
-#define SHT_STRTAB	3
-#define SHT_RELA	4
-#define SHT_HASH	5
-#define SHT_DYNAMIC	6
-#define SHT_NOTE	7
-#define SHT_NOBITS	8
-#define SHT_REL		9
-#define SHT_SHLIB	10
-#define SHT_DYNSYM	11
-#define SHT_NUM		12
-#define SHT_LOPROC	0x70000000
-#define SHT_HIPROC	0x7fffffff
-#define SHT_LOUSER	0x80000000
-#define SHT_HIUSER	0xffffffff
+#define SHT_NULL	  0		/* Section header table entry unused */
+#define SHT_PROGBITS	  1		/* Program data */
+#define SHT_SYMTAB	  2		/* Symbol table */
+#define SHT_STRTAB	  3		/* String table */
+#define SHT_RELA	  4		/* Relocation entries with addends */
+#define SHT_HASH	  5		/* Symbol hash table */
+#define SHT_DYNAMIC	  6		/* Dynamic linking information */
+#define SHT_NOTE	  7		/* Notes */
+#define SHT_NOBITS	  8		/* Program space with no data (bss) */
+#define SHT_REL		  9		/* Relocation entries, no addends */
+#define SHT_SHLIB	  10		/* Reserved */
+#define SHT_DYNSYM	  11		/* Dynamic linker symbol table */
+#define SHT_INIT_ARRAY	  14		/* Array of constructors */
+#define SHT_FINI_ARRAY	  15		/* Array of destructors */
+#define SHT_PREINIT_ARRAY 16		/* Array of pre-constructors */
+#define SHT_GROUP	  17		/* Section group */
+#define SHT_SYMTAB_SHNDX  18		/* Extended section indeces */
+#define	SHT_NUM		  19		/* Number of defined types.  */
+#define SHT_LOOS	  0x60000000	/* Start OS-specific.  */
+#define SHT_GNU_ATTRIBUTES 0x6ffffff5	/* Object attributes.  */
+#define SHT_GNU_HASH	  0x6ffffff6	/* GNU-style hash table.  */
+#define SHT_GNU_LIBLIST	  0x6ffffff7	/* Prelink library list */
+#define SHT_CHECKSUM	  0x6ffffff8	/* Checksum for DSO content.  */
+#define SHT_LOSUNW	  0x6ffffffa	/* Sun-specific low bound.  */
+#define SHT_SUNW_move	  0x6ffffffa
+#define SHT_SUNW_COMDAT   0x6ffffffb
+#define SHT_SUNW_syminfo  0x6ffffffc
+#define SHT_GNU_verdef	  0x6ffffffd	/* Version definition section.  */
+#define SHT_GNU_verneed	  0x6ffffffe	/* Version needs section.  */
+#define SHT_GNU_versym	  0x6fffffff	/* Version symbol table.  */
+#define SHT_HISUNW	  0x6fffffff	/* Sun-specific high bound.  */
+#define SHT_HIOS	  0x6fffffff	/* End OS-specific type */
+#define SHT_LOPROC	  0x70000000	/* Start of processor-specific */
+#define SHT_HIPROC	  0x7fffffff	/* End of processor-specific */
+#define SHT_LOUSER	  0x80000000	/* Start of application-specific */
+#define SHT_HIUSER	  0x8fffffff	/* End of application-specific */
 
-/* sh_flags */
-#define SHF_WRITE		0x1
-#define SHF_ALLOC		0x2
-#define SHF_EXECINSTR		0x4
-#define SHF_RELA_LIVEPATCH	0x00100000
-#define SHF_RO_AFTER_INIT	0x00200000
-#define SHF_MASKPROC		0xf0000000
+
+// section flags
+#define SHF_WRITE	           (1 << 0)	/* Writable */
+#define SHF_ALLOC	           (1 << 1)	/* Occupies memory during execution */
+#define SHF_EXECINSTR	       (1 << 2)	/* Executable */
+#define SHF_MERGE	           (1 << 4)	/* Might be merged */
+#define SHF_STRINGS	         (1 << 5)	/* Contains nul-terminated strings */
+#define SHF_INFO_LINK	       (1 << 6)	/* `sh_info' contains SHT index */
+#define SHF_LINK_ORDER	     (1 << 7)	/* Preserve order after combining */
+#define SHF_OS_NONCONFORMING (1 << 8)	/* Non-standard OS specific handling required */
+#define SHF_GROUP	           (1 << 9)	/* Section is member of a group.  */
+#define SHF_TLS		           (1 << 10)	/* Section hold thread-local data.  */
+#define SHF_COMPRESSED	     (1 << 11)	/* Section with compressed data. */
+#define SHF_MASKOS	         0x0ff00000	/* OS-specific.  */
+#define SHF_MASKPROC	       0xf0000000	/* Processor-specific */
+#define SHF_ORDERED	         (1 << 30)	/* Special ordering requirement (Solaris).  */
+#define SHF_EXCLUDE	         (1U << 31)	/* Section is excluded unless referenced or allocated (Solaris).*/
 
 /* special section indexes */
-#define SHN_UNDEF	0
-#define SHN_LORESERVE	0xff00
-#define SHN_LOPROC	0xff00
-#define SHN_HIPROC	0xff1f
-#define SHN_LIVEPATCH	0xff20
-#define SHN_ABS		0xfff1
-#define SHN_COMMON	0xfff2
-#define SHN_HIRESERVE	0xffff
- 
+#define SHN_UNDEF	0		/* Undefined section */
+#define SHN_LORESERVE	0xff00		/* Start of reserved indices */
+#define SHN_LOPROC	0xff00		/* Start of processor-specific */
+#define SHN_BEFORE	0xff00		/* Order section before all others (Solaris).  */
+#define SHN_AFTER	0xff01		/* Order section after all others (Solaris).  */
+#define SHN_HIPROC	0xff1f		/* End of processor-specific */
+#define SHN_LOOS	0xff20		/* Start of OS-specific */
+#define SHN_HIOS	0xff3f		/* End of OS-specific */
+#define SHN_ABS		0xfff1		/* Associated symbol is absolute */
+#define SHN_COMMON	0xfff2		/* Associated symbol is common */
+#define SHN_XINDEX	0xffff		/* Index is in extra table.  */
+#define SHN_HIRESERVE	0xffff		/* End of reserved indices */
+
+/* Possible values for si_boundto.  */
+#define SYMINFO_BT_SELF		0xffff	/* Symbol bound to self */
+#define SYMINFO_BT_PARENT	0xfffe	/* Symbol bound to parent */
+#define SYMINFO_BT_LOWRESERVE	0xff00	/* Beginning of reserved entries */
+
+/* Possible bitmasks for si_flags.  */
+#define SYMINFO_FLG_DIRECT	0x0001	/* Direct bound symbol */
+#define SYMINFO_FLG_PASSTHRU	0x0002	/* Pass-thru symbol for translator */
+#define SYMINFO_FLG_COPY	0x0004	/* Symbol is a copy-reloc */
+#define SYMINFO_FLG_LAZYLOAD	0x0008	/* Symbol bound to object to be lazy loaded */
+
+
+/* Syminfo version values.  */
+#define SYMINFO_NONE		0
+#define SYMINFO_CURRENT		1
+#define SYMINFO_NUM		2
+
+
+/* How to extract and insert information held in the st_info field.  */
+#define ELF32_ST_BIND(val)		(((unsigned char) (val)) >> 4)
+#define ELF32_ST_TYPE(val)		((val) & 0xf)
+#define ELF32_ST_INFO(bind, type)	(((bind) << 4) + ((type) & 0xf))
+
+/* Both Elf32_Sym and Elf64_Sym use the same one-byte st_info field.  */
+#define ELF64_ST_BIND(val)		ELF32_ST_BIND (val)
+#define ELF64_ST_TYPE(val)		ELF32_ST_TYPE (val)
+#define ELF64_ST_INFO(bind, type)	ELF32_ST_INFO ((bind), (type))
+
+/* Legal values for ST_BIND subfield of st_info (symbol binding).  */
+
+#define STB_LOCAL	0		/* Local symbol */
+#define STB_GLOBAL	1		/* Global symbol */
+#define STB_WEAK	2		/* Weak symbol */
+#define	STB_NUM		3		/* Number of defined types.  */
+#define STB_LOOS	10		/* Start of OS-specific */
+#define STB_GNU_UNIQUE	10		/* Unique symbol.  */
+#define STB_HIOS	12		/* End of OS-specific */
+#define STB_LOPROC	13		/* Start of processor-specific */
+#define STB_HIPROC	15		/* End of processor-specific */
+
+/* Legal values for ST_TYPE subfield of st_info (symbol type).  */
+
+#define STT_NOTYPE	0		/* Symbol type is unspecified */
+#define STT_OBJECT	1		/* Symbol is a data object */
+#define STT_FUNC	2		/* Symbol is a code object */
+#define STT_SECTION	3		/* Symbol associated with a section */
+#define STT_FILE	4		/* Symbol's name is file name */
+#define STT_COMMON	5		/* Symbol is a common data object */
+#define STT_TLS		6		/* Symbol is thread-local data object*/
+#define	STT_NUM		7		/* Number of defined types.  */
+#define STT_LOOS	10		/* Start of OS-specific */
+#define STT_GNU_IFUNC	10		/* Symbol is indirect code object */
+#define STT_HIOS	12		/* End of OS-specific */
+#define STT_LOPROC	13		/* Start of processor-specific */
+#define STT_HIPROC	15		/* End of processor-specific */
+
+typedef struct
+{
+  Elf64_Addr	r_offset;		/* Address */
+  Elf64_Xword	r_info;			/* Relocation type and symbol index */
+} Elf64_Rel;
+
+/* Relocation table entry with addend (in section of type SHT_RELA).  */
+
+typedef struct
+{
+  Elf32_Addr	r_offset;		/* Address */
+  Elf32_Word	r_info;			/* Relocation type and symbol index */
+  Elf32_Sword	r_addend;		/* Addend */
+} Elf32_Rela;
+
+typedef struct
+{
+  Elf64_Addr	r_offset;		/* Address */
+  Elf64_Xword	r_info;			/* Relocation type and symbol index */
+  Elf64_Sxword	r_addend;		/* Addend */
+} Elf64_Rela;
+
+/* How to extract and insert information held in the r_info field.  */
+
+#define ELF32_R_SYM(val)		((val) >> 8)
+#define ELF32_R_TYPE(val)		((val) & 0xff)
+#define ELF32_R_INFO(sym, type)		(((sym) << 8) + ((type) & 0xff))
+
+#define ELF64_R_SYM(i)			((i) >> 32)
+#define ELF64_R_TYPE(i)			((i) & 0xffffffff)
+#define ELF64_R_INFO(sym,type)		((((Elf64_Xword) (sym)) << 32) + (type))
+
 typedef struct elf32_shdr {
   Elf32_Word	sh_name;
   Elf32_Word	sh_type;
