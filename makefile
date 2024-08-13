@@ -1,4 +1,6 @@
 make = make
+Build = build
+
 EXTENSION_flag = -DRISC_V_EXT_ZICSR=1
 
 cc = g++
@@ -26,11 +28,13 @@ endif
 SRCS = BUS.cpp main.cpp RISC_V_cmd.cpp RISC_V_emu.cpp RISC_V_load_guest.cpp \
 RISC_V_unzip_instr.cpp Syscall.cpp
 
-OBJS= $(SRCS:%.cpp=%.o)
+OBJS= $(SRCS:%.cpp=$(Build)/%.o)
 
 DEPS = $(OBJS:%.o=%.d)
 
 BIN = main.exe
+
+INCLUDE = -Iinclude
 
 RM = rm -rf
 
@@ -40,33 +44,35 @@ endif
 
 .PHONY: clean all add_test_src gen_cov_record run_test
 
-all:$(OBJS) $(BIN)
+all:$(Build) $(OBJS) $(BIN)
 	make add_test_src
 
 $(BIN) : $(OBJS)
 	$(cc) $(OBJS) $(CPP_FLAG) $(LINK) -o $@
 
+$(Build):
+	$(shell mkdir -p $(Build))
 
-BUS.o :BUS.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/BUS.o :./src/BUS.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
-main.o :main.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/main.o :src/main.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
-RISC_V_cmd.o :RISC_V_cmd.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/RISC_V_cmd.o :src/RISC_V_cmd.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
-RISC_V_emu.o :RISC_V_emu.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/RISC_V_emu.o :src/RISC_V_emu.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
-RISC_V_load_guest.o :RISC_V_load_guest.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/RISC_V_load_guest.o :src/RISC_V_load_guest.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
-RISC_V_unzip_instr.o :RISC_V_unzip_instr.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/RISC_V_unzip_instr.o :src/RISC_V_unzip_instr.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
-Syscall.o :Syscall.cpp
-	$(cc) $< $(CPP_FLAG) -c -o $@
+$(Build)/Syscall.o :src/Syscall.cpp
+	$(cc) $< $(INCLUDE) $(CPP_FLAG) -c -o $@
 
 -include $(DEPS)
 
@@ -75,7 +81,7 @@ clean:
 	$(foreach dep, $(DEPS), $(RM) $(dep);)
 	$(foreach obj, $(OBJS), $(RM) $(obj);)
 	$(RM) $(wildcard ./*.exe) *.gcno *.gcda
-	rm -rf result
+	rm -rf result $(Build)
 
 run_test:
 	python3 ./run_test.py

@@ -69,6 +69,7 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
 {
     map.map.reserve(1024);
     map.map.max_load_factor(0.25);
+    
     RISC_V_Instruction_map::Command_attribute attr;
 
     [[maybe_unused]] bool regist_success {};
@@ -188,6 +189,7 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     //RV64I
     REGIST_CMD(0b0000000'00000'00000'011'00000'0100011, SD,   S);
 
+#if RISC_V_EXT_ZICSR == 1
     //Zicsr
     REGIST_CMD(0b000000000000'00000'001'00000'1110011, CSRRW, I);
     REGIST_CMD(0b000000000000'00000'010'00000'1110011, CSRRS, I);
@@ -195,6 +197,7 @@ static void Regist_RVI_cmd(RISC_V_Instruction_map &map)
     REGIST_CMD(0b000000000000'00000'100'00000'1110011, CSRRC, I);
     REGIST_CMD(0b000000000000'00000'101'00000'1110011, CSRRSI, I);
     REGIST_CMD(0b000000000000'00000'110'00000'1110011, CSRRCI, I);
+#endif
 
     #undef REGIST_CMD
 }
